@@ -5,7 +5,7 @@ import {
     ChartTooltipContent, 
     ChartLegend, 
     ChartLegendContent 
-} from "@/Core/Components/shadcnComponents/ui/chart"
+} from "@/Core/Components/shadcnComponents/Ui/chart"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import { DefineApp } from "@/Core/Components/Utils/DefineApp"
 import appMainPageIcon from "@/assets/icons/cloud.svg"

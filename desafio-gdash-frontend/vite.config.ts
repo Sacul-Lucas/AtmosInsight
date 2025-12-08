@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: isProduction
             ? 'https://aceschedules.onrender.com'
-            : 'http://localhost:1000',
+            : 'http://localhost:1500',
           changeOrigin: true,
         },
       },
@@ -28,6 +28,6 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    base: '/AtmosInsight/',
+    base: '/AtmosInsight',
   };
 });
