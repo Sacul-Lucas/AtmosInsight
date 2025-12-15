@@ -1,6 +1,7 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Body, UnauthorizedException, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import type { Request } from 'express';
 import * as bcrypt from 'bcrypt';
 
 @Controller('api/auth')
@@ -10,7 +11,6 @@ export class AuthController {
     private readonly usersService: UsersService,
   ) {}
 
-  // Login
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
     if (!body.email) throw new UnauthorizedException('Insira um email válido');
@@ -26,7 +26,6 @@ export class AuthController {
     return { success: true, message: 'Login realizado com sucesso', token };
   }
 
-  // Registrar usuário (opcional, caso queira permitir registro via API)
   @Post('register')
   async register(@Body() body: { username: string; email: string; password: string }) {
     if (!body.username) throw new UnauthorizedException('Insira um nome de usuário válido');

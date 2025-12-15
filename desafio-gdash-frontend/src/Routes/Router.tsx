@@ -3,34 +3,36 @@ import {
     Routes,
     Route
 } from "react-router-dom";
-import { MainPage } from "./MainPage/MainPage";
+import { Dashboard } from "./Dashboard/Dashboard";
 import { Login } from "./Login/Login";
 import { Register } from "./Register/Register";
 import { ProtectedRoute } from "./Utils/ProtectedRoute";
-import { UserAdministration } from "./UserAdministration/UserAdministration";
+import { Administration } from "./Administration/Administration";
 import { AdminRoute } from "./Utils/AdminRoute";
+import { Landing } from "./Landing/Landing";
 
 export const AppRoutes = () => {
     return (
         <Router basename="/AtmosInsight">
             <Routes>
                 <Route 
-                    path="/" 
+                    path="/Dashboard" 
                     element={
                         <ProtectedRoute>
-                            <MainPage/> 
+                            <Dashboard/> 
                         </ProtectedRoute>
                     } 
                 />
                 
                 <Route 
-                    path="/UserAdmin" 
+                    path="/Administration" 
                     element={
                         <AdminRoute>
-                            <UserAdministration/> 
+                            <Administration/> 
                         </AdminRoute>
                     } 
                 />
+                <Route path="/" element={<Landing/>} />
                 <Route path="/Login" element={<Login/>} />
                 <Route path="/Register" element={<Register/>} />
             </Routes>

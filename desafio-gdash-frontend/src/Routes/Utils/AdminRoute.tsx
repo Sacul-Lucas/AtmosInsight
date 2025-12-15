@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { getToken, getUserFromToken } from "@/Core/lib/utils/tokenValidation";
 
 interface AdminRouteProps {
     children: ReactNode;
@@ -9,13 +9,12 @@ interface AdminRouteProps {
 export const AdminRoute: React.FC<AdminRouteProps> = ({
     children,
 }) => {
-    const token = localStorage.getItem("token");
-    
+    const token = getToken()
+    const tokenUserRole = getUserFromToken()?.role
+
     if (!token) return <Navigate to="/Login" replace />;
     
-    const decoded = jwtDecode<{ role: string }>(token);
-    
-    if (decoded.role !== "admin") {
+    if (tokenUserRole !== "admin") {
       return <Navigate to="/Forbidden" replace />;
     }
   

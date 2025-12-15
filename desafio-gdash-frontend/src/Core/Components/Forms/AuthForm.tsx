@@ -19,45 +19,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react"
 import { z } from "zod"
 import bgWeatherImg from "@/assets/img/pexels-pixabay-209831.jpg"
-
-const passwordValidation = z
-    .string()
-    .min(8, {
-      message: "A senha deve possuir ao menos 8 caracteres",
-    })
-    .regex(/[a-z]/, {
-      message: "A senha deve conter pelo menos uma letra minúscula",
-    })
-    .regex(/[A-Z]/, {
-      message: "A senha deve conter pelo menos uma letra maiúscula",
-    })
-    .regex(/[0-9]/, {
-      message: "A senha deve conter pelo menos um número",
-    })
-    .regex(/[^a-zA-Z0-9]/, {
-      message: "A senha deve conter pelo menos um caractere especial",
-    });
-
-export const formSchema = z.object({
-    username: z
-        .string()
-        .min(2, {
-          message: "Nome de usuário deve possuir ao menos 2 caracteres",
-        })
-        .max(50, {
-          message: "Nome de usuário não pode ter mais de 50 caracteres",
-        })
-        .optional()
-        .or(z.literal("")),
-
-    email: z
-        .email("O email inserido é inválido")
-        .min(12, {
-          message: "Email deve possuir ao menos 12 caracteres",
-        }),
-
-    password: passwordValidation,
-});
+import { formSchema } from "@/Core/lib/utils/userFormSchema"
 
 interface AuthFormProps {
     formAction: SubmitHandler<{ username?: string | undefined; email: string; password: string; }>;
@@ -149,7 +111,8 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                                               placeholder="Insira sua senha"
                                               {...field}
                                               type={showPassword ? "text" : "password"}
-                                              className="pr-10" // espaço para o botão
+                                              className="pr-10"
+                                              autoComplete="off"
                                             />
                                           </FormControl>
 

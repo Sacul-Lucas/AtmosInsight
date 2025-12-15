@@ -9,7 +9,9 @@ export type AuthUserActionInput = {
 export type AuthUserActionOutput = {
   status: AuthUserStatus;
   data: string;
-  token: object | undefined;
+  token: {
+    access_token: string;
+  };
 };
 
 export type AuthUserStatus = 'SUCCESS' | 'EMAIL_NOT_FOUND' | 'INVALID_PASSWORD' | 'UNKNOWN';
@@ -30,26 +32,22 @@ export class AuthUserAction {
       if (success) {
         return { status: 'SUCCESS', data: message, token: token };
       } else {
-        return { status: 'UNKNOWN', data: message || 'Erro desconhecido', token: undefined };
+        return { status: 'UNKNOWN', data: message || 'Erro desconhecido', token };
       }
     } catch (error: any) {
-      // Axios lança erro para qualquer status code != 2xx
       if (error.response && error.response.data) {
-        // Aqui você pega a mensagem enviada pelo backend
         const { message, error: backendError } = error.response.data;
         
-        // Mapear status conforme a mensagem
         if (message === 'Email não encontrado') {
-          return { status: 'EMAIL_NOT_FOUND', data: message, token: undefined };
+          return { status: 'EMAIL_NOT_FOUND', data: message, token: {access_token: ''} };
         } else if (message === 'Senha incorreta') {
-          return { status: 'INVALID_PASSWORD', data: message, token: undefined };
+          return { status: 'INVALID_PASSWORD', data: message, token: {access_token: ''} };
         } else {
-          return { status: 'UNKNOWN', data: message || backendError || 'Erro desconhecido', token: undefined };
+          return { status: 'UNKNOWN', data: message || backendError || 'Erro desconhecido', token: {access_token: ''} };
         }
       }
 
-      // Erro de rede ou outro erro
-      return { status: 'UNKNOWN', data: error.message || 'Erro de conexão', token: undefined };
+      return { status: 'UNKNOWN', data: error.message || 'Erro de conexão', token: {access_token: ''} };
     }
   }
 }

@@ -1,5 +1,4 @@
 import { DefineApp } from "@/Core/Components/Utils/DefineApp";
-import { formSchema } from "@/Core/Components/Forms/AuthForm";
 import { AuthForm } from "@/Core/Components/Forms/AuthForm";
 import { AuthUserAction } from "@/Core/Actions/AuthUserAction";
 import { Toaster } from "@/Core/Components/shadcnComponents/Ui/sonner";
@@ -7,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner"
 import { z } from "zod";
 import appAuthIcon from "@/assets/icons/user-auth.svg";
+import type { formSchema } from "@/Core/lib/utils/userFormSchema";
 
 export const Login = () => {
   const navigate = useNavigate()
@@ -19,12 +19,12 @@ export const Login = () => {
 
     switch (authRes.status) {
       case "SUCCESS":
-        localStorage.setItem("token", authRes.token!.toString());
+        localStorage.setItem("token", authRes.token.access_token);
         toast.success(message, {
           duration: 1500,
           className: "!bg-emerald-700 !border-emerald-800 !text-white"
         });
-        setTimeout(() => navigate("/"), 1500);
+        setTimeout(() => navigate("/Dashboard"), 1500);
         break;
 
       case "EMAIL_NOT_FOUND":

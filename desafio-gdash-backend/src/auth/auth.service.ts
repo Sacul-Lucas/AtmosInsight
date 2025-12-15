@@ -7,9 +7,13 @@ export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
   generateJwt(user: User) {
-    const payload = { sub: user._id, email: user.email, role: user.role };
+    const payload = { sub: user._id.toString(), email: user.email, username: user.username, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  verifyJwt(token: string) {
+    return this.jwtService.verify(token);
   }
 }

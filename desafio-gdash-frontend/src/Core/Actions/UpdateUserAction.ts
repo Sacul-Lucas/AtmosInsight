@@ -1,38 +1,44 @@
+import { getToken } from "../lib/utils/tokenValidation";
 import { API_BASE_URL } from "../../Config";
 import axios from "axios";
 
-export type RegisterUserActionInput = {
+export type UpdateUserActionInput = {
   username?: string;
   email: string;
-  password: string;
+  usertype?: string;
 };
 
-export type RegisterUserActionOutput = {
-  status: RegisterUserStatus;
+export type UpdateUserActionOutput = {
+  status: UpdateUserStatus;
   data: string;
 };
 
-export type RegisterUserStatus = 
+export type UpdateUserStatus = 
   | 'SUCCESS'
   | 'EMAIL_ALREADY_EXISTS'
   | 'UNKNOWN';
 
-export class RegisterUserAction {
-  static async execute(input: RegisterUserActionInput): Promise<RegisterUserActionOutput> {
+const token = getToken()
+
+export class UpdateUserAction {
+  static async execute(input: UpdateUserActionInput, id: string): Promise<UpdateUserActionOutput> {
     try {
-        const response = await axios.post(`${API_BASE_URL}/auth/register`, {
+        const response = await axios.put(`${API_BASE_URL}/users/${id}`, {
             username: input.username,
             email: input.email,
-            password: input.password,
+            role: input.usertype,
         }, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
             withCredentials: true,
         });
 
         const { success, message } = response.data;
 
         if (success) {
-            return { status: 'SUCCESS', data: message || 'Conta criada com sucesso!' };
+            return { status: 'SUCCESS', data: message || 'Usuário atualizado com sucesso!' };
         } else {
             return { status: 'UNKNOWN', data: message || 'Erro desconhecido' };
         }

@@ -9,7 +9,7 @@ export class SeedAdmin implements OnApplicationBootstrap {
   async onApplicationBootstrap() {
     const email = process.env.ADMIN_EMAIL;
     const password = process.env.ADMIN_PASSWORD;
-    const username = process.env.ADMIN_USERNAME || 'Admin';
+    const username = process.env.ADMIN_USERNAME || 'Administrador';
     const role = process.env.ADMIN_ROLE;
 
     if (!email || !password) {

@@ -1,5 +1,5 @@
 import { DefineApp } from "@/Core/Components/Utils/DefineApp";
-import { formSchema } from "@/Core/Components/Forms/AuthForm";
+import type { formSchema } from "@/Core/lib/utils/userFormSchema";
 import { AuthForm } from "@/Core/Components/Forms/AuthForm";
 import { RegisterUserAction } from "@/Core/Actions/AuthRegisterAction";
 import { Toaster } from "@/Core/Components/shadcnComponents/Ui/sonner";

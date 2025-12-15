@@ -3,7 +3,7 @@
 
 @theme {
   --animate-fade-in: fade-in 0.3s ease-in;
-  
+
   @keyframes fade-in {
     0% {
       opacity: 0;

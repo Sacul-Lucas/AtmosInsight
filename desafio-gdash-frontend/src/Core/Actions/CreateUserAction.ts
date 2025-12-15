@@ -1,31 +1,40 @@
+import { getToken } from "../lib/utils/tokenValidation";
 import { API_BASE_URL } from "../../Config";
 import axios from "axios";
 
-export type RegisterUserActionInput = {
+
+export type CreateUserActionInput = {
   username?: string;
   email: string;
   password: string;
+  usertype?: string;
 };
 
-export type RegisterUserActionOutput = {
-  status: RegisterUserStatus;
+export type CreateUserActionOutput = {
+  status: CreateUserStatus;
   data: string;
 };
 
-export type RegisterUserStatus = 
+export type CreateUserStatus = 
   | 'SUCCESS'
   | 'EMAIL_ALREADY_EXISTS'
   | 'UNKNOWN';
 
-export class RegisterUserAction {
-  static async execute(input: RegisterUserActionInput): Promise<RegisterUserActionOutput> {
+const token = getToken()
+
+export class CreateUserAction {
+  static async execute(input: CreateUserActionInput): Promise<CreateUserActionOutput> {
     try {
-        const response = await axios.post(`${API_BASE_URL}/auth/register`, {
+        const response = await axios.post(`${API_BASE_URL}/users`, {
             username: input.username,
             email: input.email,
             password: input.password,
+            role: input.usertype,
         }, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
             withCredentials: true,
         });
 
