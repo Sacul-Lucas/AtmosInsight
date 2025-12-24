@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+RUN corepack enable
+COPY .yarnrc.yml ./
+COPY .yarn ./.yarn
+COPY package*.json yarn.lock ./
+RUN yarn install --immutable
+COPY . .
+
+ARG VITE_API_URL
+ARG VITE_API_BASE_URL
+
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+ENV DOCKER=true
+
+EXPOSE 1000
+CMD ["yarn", "dev"]

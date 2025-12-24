@@ -10,6 +10,7 @@ import { ProtectedRoute } from "./Utils/ProtectedRoute";
 import { Administration } from "./Administration/Administration";
 import { AdminRoute } from "./Utils/AdminRoute";
 import { Landing } from "./Landing/Landing";
+import { Settings } from "./Settings/Settings";
 
 export const AppRoutes = () => {
     return (
@@ -30,6 +31,15 @@ export const AppRoutes = () => {
                         <AdminRoute>
                             <Administration/> 
                         </AdminRoute>
+                    } 
+                />
+
+                <Route 
+                    path="/Settings" 
+                    element={
+                        <ProtectedRoute>
+                            <Settings/> 
+                        </ProtectedRoute>
                     } 
                 />
                 <Route path="/" element={<Landing/>} />

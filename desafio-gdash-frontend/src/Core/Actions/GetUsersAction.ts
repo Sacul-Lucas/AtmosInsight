@@ -13,14 +13,14 @@ const token = localStorage.getItem("token")
 export class GetUsersAction {
     static async execute(): Promise<GetUsersActionOutput> {
         try {
-            const response = await axios.get(`${API_BASE_URL}/users`,
-            {
-              headers: {
-                'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${token}` 
-              },
-              withCredentials: true
-            });
+          const response = await axios.get(`${API_BASE_URL}/users`,
+          {
+            headers: {
+              'Content-Type': 'application/json', 
+              'Authorization': `Bearer ${token}` 
+            },
+            withCredentials: true
+          });
 
           const { success, message } = response.data;
 

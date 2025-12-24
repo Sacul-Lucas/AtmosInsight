@@ -2,11 +2,11 @@ import { DefineApp } from "@/Core/Components/Utils/DefineApp";
 import { AuthForm } from "@/Core/Components/Forms/AuthForm";
 import { AuthUserAction } from "@/Core/Actions/AuthUserAction";
 import { Toaster } from "@/Core/Components/shadcnComponents/Ui/sonner";
+import type { formSchema } from "@/Core/lib/utils/userFormSchema";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner"
 import { z } from "zod";
 import appAuthIcon from "@/assets/icons/user-auth.svg";
-import type { formSchema } from "@/Core/lib/utils/userFormSchema";
 
 export const Login = () => {
   const navigate = useNavigate()
@@ -47,7 +47,7 @@ export const Login = () => {
     <DefineApp
       appTitle="AtmosInsight - Login"
       appIcon={appAuthIcon}
-      bodyStyle="flex bg-white w-full min-h-dvh bg-no-repeat justify-center items-center"
+      bodyStyle="flex w-full min-h-dvh bg-no-repeat justify-center items-center"
     >
       <AuthForm formType="Login" formAction={handleSubmit} formMethod="POST" />
 

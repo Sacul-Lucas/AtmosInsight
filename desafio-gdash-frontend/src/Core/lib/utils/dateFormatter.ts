@@ -8,6 +8,5 @@ export const formatDate = (date: string | Date | number | undefined) => {
     minute: "2-digit",
     second: "2-digit",
     hour12: false,
-    timeZone: "UTC"
   }).format(new Date(date));
 };

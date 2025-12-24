@@ -1,0 +1,177 @@
+services:
+
+  mongo:
+    image: mongo
+    profiles: ["prod", "dev"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    profiles: ["prod", "dev"]
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RMQ_DEFAULT_PASS}
+
+  backend:
+    build: 
+      context: ./desafio-gdash-backend
+      dockerfile: Dockerfile.prod
+    container_name: backend
+    ports:
+      - "1500:1500"
+    depends_on:
+      - mongo
+    profiles: ["prod"]
+    environment:
+      PORT: ${BACK_PORT}
+      NODE_ENV: ${NODE_ENV}
+
+      MONGO_URI: ${BACK_MONGO_URI}
+
+      JWT_SECRET: ${BACK_JWT_SECRET}
+      JWT_EXPIRES: ${BACK_JWT_EXPIRES}
+
+      ADMIN_EMAIL: ${BACK_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${BACK_ADMIN_PASSWORD}
+      ADMIN_USERNAME: ${BACK_ADMIN_USERNAME}
+      ADMIN_ROLE: ${BACK_ADMIN_ROLE}
+
+      DEFAULT_CITY: ${BACK_DEFAULT_CITY}
+      DEFAULT_LAT: ${BACK_DEFAULT_LAT}
+      DEFAULT_LON: ${BACK_DEFAULT_LON}
+
+      GEMINI_API_URL: ${BACK_GEMINI_API_URL}
+      GEMINI_API_KEY: ${BACK_GEMINI_API_KEY}
+
+      WORKER_TOKEN: ${WORKER_TOKEN}
+
+  worker:
+    build: ./worker
+    container_name: worker
+    profiles: ["prod"]
+    depends_on:
+      - rabbitmq
+      - backend
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      API_URL: ${WORKER_API_URL}
+      WORKER_TOKEN: ${WORKER_TOKEN}
+
+  worker-dev:
+    build: ./worker
+    container_name: worker-dev
+    profiles: ["dev"]
+    depends_on:
+      - backend-dev
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      API_URL: ${WORKER_API_URL}
+      WORKER_TOKEN: ${WORKER_TOKEN}
+
+  collector:
+    build: ./collector
+    container_name: collector
+    profiles: ["prod"]
+    depends_on:
+      - rabbitmq
+      - backend
+    environment:
+      NODE_ENV: ${NODE_ENV}
+
+      RABBITMQ_URL: ${RMQ_RABBITMQ_URL}
+      QUEUE_NAME: ${RMQ_QUEUE_NAME}
+      API_BASE_URL: ${RMQ_API_BASE_URL}
+      LOCATIONS_ENDPOINT: ${RMQ_LOCATIONS_ENDPOINT}
+      COLLECTION_INTERVAL_SECONDS: ${RMQ_COLLECTION_INTERVAL_SECONDS}
+
+  collector-dev:
+    build: ./collector
+    container_name: collector
+    profiles: ["dev"]
+    depends_on:
+      - rabbitmq
+      - backend-dev
+    environment:
+      NODE_ENV: ${NODE_ENV}
+
+      RABBITMQ_URL: ${RMQ_RABBITMQ_URL}
+      QUEUE_NAME: ${RMQ_QUEUE_NAME}
+      API_BASE_URL: ${RMQ_API_BASE_URL}
+      LOCATIONS_ENDPOINT: ${RMQ_LOCATIONS_ENDPOINT}
+      COLLECTION_INTERVAL_SECONDS: ${RMQ_COLLECTION_INTERVAL_SECONDS}
+
+  frontend:
+    build:
+      context: ./desafio-gdash-frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    container_name: frontend
+    profiles: ["prod"]
+    ports:
+      - "1000:1000"
+    depends_on:
+      - backend
+
+  backend-dev:
+    build: 
+      context: ./desafio-gdash-backend
+      dockerfile: Dockerfile.dev
+    container_name: backend-dev
+    profiles: ["dev"]
+    ports:
+      - "1500:1500"
+    depends_on:
+      - mongo
+    environment:
+      PORT: ${BACK_PORT}
+      NODE_ENV: ${NODE_ENV}
+
+      MONGO_URI: ${BACK_MONGO_URI}
+
+      JWT_SECRET: ${BACK_JWT_SECRET}
+      JWT_EXPIRES: ${BACK_JWT_EXPIRES}
+
+      ADMIN_EMAIL: ${BACK_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${BACK_ADMIN_PASSWORD}
+      ADMIN_USERNAME: ${BACK_ADMIN_USERNAME}
+      ADMIN_ROLE: ${BACK_ADMIN_ROLE}
+
+      DEFAULT_CITY: ${BACK_DEFAULT_CITY}
+      DEFAULT_LAT: ${BACK_DEFAULT_LAT}
+      DEFAULT_LON: ${BACK_DEFAULT_LON}
+
+      GEMINI_API_URL: ${BACK_GEMINI_API_URL}
+      GEMINI_API_KEY: ${BACK_GEMINI_API_KEY}
+
+      WORKER_TOKEN: ${WORKER_TOKEN}
+
+  frontend-dev:
+    build:
+      context: ./desafio-gdash-frontend
+      dockerfile: Dockerfile.dev
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    container_name: frontend-dev
+    profiles: ["dev"]
+    ports:
+      - "1000:1000"
+    depends_on:
+      - backend-dev
+      
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  mongodb_data:
+    driver: local

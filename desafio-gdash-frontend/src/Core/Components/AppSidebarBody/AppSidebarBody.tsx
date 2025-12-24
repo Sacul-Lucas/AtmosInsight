@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { SidebarProvider, SidebarTrigger } from "@/Core/Components/shadcnComponents/Ui/sidebar"
 import { AppSidebar } from "@/Core/Components/AppSidebar/AppSidebar"
 import { DefineApp } from "../Utils/DefineApp"
-import { AuthProvider } from "../Utils/AuthContext"
+import { AuthProvider } from "../Providers/AuthContext"
 
 interface bodyProps {
     appSidebarTitle: string

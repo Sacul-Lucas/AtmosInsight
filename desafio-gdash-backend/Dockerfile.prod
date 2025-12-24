@@ -1,0 +1,25 @@
+# 1. Imagem base (Node)
+FROM node:20-alpine
+
+# 2. Diretório de trabalho dentro do container
+WORKDIR /app
+
+RUN corepack enable
+
+# 3. Copia package.json primeiro (cache)
+COPY package*.json ./
+
+# 4. Instala dependências
+RUN yarn install --immutable
+
+# 5. Copia o restante do código
+COPY . .
+
+# 6. Build do Nest
+RUN yarn build
+
+# 7. Porta exposta
+EXPOSE 1500
+
+# 8. Comando para rodar
+CMD ["yarn", "start:prod"]

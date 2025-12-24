@@ -45,7 +45,7 @@ export const Register = () => {
     <DefineApp
       appTitle="AtmosInsight - Registro"
       appIcon={appAuthIcon}
-      bodyStyle="flex bg-white w-full min-h-dvh bg-no-repeat justify-center items-center"
+      bodyStyle="flex w-full min-h-dvh bg-no-repeat justify-center items-center"
     >
       <AuthForm formType="Register" formAction={handleSubmit} formMethod="POST" />
 

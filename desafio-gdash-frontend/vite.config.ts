@@ -6,18 +6,21 @@ import path from "path"
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
+  const isDocker = process.env.DOCKER === "true";
 
   return {
     server: {
+      open: !isDocker,
+      host: isDocker ? '0.0.0.0' : 'localhost',
+      base: '/AtmosInsight',
       proxy: {
         '/api': {
           target: isProduction
-            ? 'https://aceschedules.onrender.com'
-            : 'http://localhost:1500',
+            ? 'https://aceschedules.onrender.com/api'
+            : 'http://backend-dev:1500',
           changeOrigin: true,
         },
       },
-      host: 'localhost',
     },
     plugins: [
       react(),
@@ -28,6 +31,5 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    base: '/AtmosInsight',
   };
 });

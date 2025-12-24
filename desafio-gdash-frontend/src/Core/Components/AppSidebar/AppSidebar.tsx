@@ -47,8 +47,8 @@ const items = [
     icon: Search,
   },
   {
-    title: "Settings",
-    url: "#",
+    title: "Configurações",
+    url: "/AtmosInsight/Settings",
     icon: Settings,
   },
 ]
@@ -60,7 +60,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>AtmosInsight</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            AtmosInsight
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items

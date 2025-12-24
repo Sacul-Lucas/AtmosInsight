@@ -247,7 +247,7 @@ export const AdminDialog: React.FC<AdminDialogProps> = ({
                                             </FormLabel>
 
                                             <FormControl>
-                                                <Input id="username-1" readOnly={!isEditable} {...field}/>
+                                                <Input id="username-1" type="text" readOnly={!isEditable} {...field}/>
                                             </FormControl>
 
                                             <FormMessage/>
@@ -265,7 +265,7 @@ export const AdminDialog: React.FC<AdminDialogProps> = ({
                                             </FormLabel>
 
                                             <FormControl>
-                                                <Input id="email-1" readOnly={!isEditable} {...field}/>
+                                                <Input id="email-1" type="text" readOnly={!isEditable} {...field}/>
                                             </FormControl>
 
                                             <FormMessage/>

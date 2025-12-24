@@ -1,32 +1,23 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UnauthorizedException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UnauthorizedException, Req, Patch, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthService } from '../auth/auth.service';
 import type { Request } from 'express';
+import { SetUserLocationDto } from 'src/locations/dto/setUserLocation.dto';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @Controller('api/users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly authService: AuthService
   ) {}
 
-  private async checkAdmin(req: Request) {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) throw new UnauthorizedException('Token não fornecido');
-
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = this.authService.verifyJwt(token);
-    if (!decoded) throw new UnauthorizedException('Token inválido');
-
-    if (decoded.role !== 'admin') throw new UnauthorizedException('Acesso negado');
-  }
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Get()
-  async findAll(@Req() req: Request) {
-    await this.checkAdmin(req);
-
+  async findAll() {
     const users = await this.usersService.findAll();
     if (!users) throw new UnauthorizedException('Não foi possível listar os usuários');
 
@@ -36,10 +27,10 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() req: Request) {
-    await this.checkAdmin(req);
-
+  async findOne(@Param('id') id: string) {
     const user = this.usersService.findOne(id);
     if (!user) throw new UnauthorizedException('Usuário não encontrado');
 
@@ -49,10 +40,10 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Post()
-  async create(@Body() body: CreateUserDto, @Req() req: Request) {
-    await this.checkAdmin(req);
-
+  async create(@Body() body: CreateUserDto) {
     const createdUser = this.usersService.create(body);
     if (!createdUser) throw new UnauthorizedException('Não foi possível criar um novo usuário');
 
@@ -69,10 +60,10 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Put(':id')
-  async update(@Param('id') id: string, @Body() body: UpdateUserDto, @Req() req: Request) {
-    await this.checkAdmin(req);
-
+  async update(@Param('id') id: string, @Body() body: UpdateUserDto) {
     const updatedUser = this.usersService.update(id, body);
     if (!updatedUser) throw new UnauthorizedException('Não foi possível editar o usuário');
 
@@ -82,10 +73,10 @@ export class UsersController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req: Request) {
-    await this.checkAdmin(req);
-
+  async remove(@Param('id') id: string) {
     const delUser = this.usersService.remove(id);
     if (!delUser) throw new UnauthorizedException('Não foi possível remover o usuário');
 
@@ -93,5 +84,23 @@ export class UsersController {
       success: true,
       message: 'Usuário removido com sucesso!'
     };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Patch(':id/location')
+  updateMyLocation(
+    @Param('id')
+    @Req() req: Request,
+    @Body() dto: SetUserLocationDto,
+    id: string,
+  ) {
+    if (!req.user) {
+      throw new UnauthorizedException('Usuário não autenticado');
+    }
+
+    return this.usersService.updateUserLocation(
+      id,
+      dto.locationId,
+    );
   }
 }
