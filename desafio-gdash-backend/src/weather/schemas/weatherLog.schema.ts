@@ -4,9 +4,6 @@ import { Document } from 'mongoose';
 @Schema({ timestamps: true })
 export class WeatherLog extends Document {
   @Prop({ required: true })
-  userId: string;
-
-  @Prop({ required: true })
   locationId: string;
 
   @Prop()

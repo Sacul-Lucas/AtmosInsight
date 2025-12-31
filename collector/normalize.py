@@ -1,9 +1,8 @@
 def normalize_weather(raw, location):
     return {
-        "location_id": location["id"],
-        "user_id": location["userId"],
+        "locationId": location["_id"],
         "location": {
-            "name": location["name"],
+            "name": location["city"],
             "latitude": location["latitude"],
             "longitude": location["longitude"],
         },

@@ -3,16 +3,19 @@ package main
 import "time"
 
 type WeatherMessage struct {
-	UserID     string    `json:"userId"`
-	LocationID string    `json:"locationId"`
-	Weather    Weather   `json:"weather"`
-	Timestamp  time.Time `json:"timestamp"`
+	LocationID  string    `json:"locationId"`
+	CollectedAt time.Time `json:"collected_at"`
+	Metrics     Metrics   `json:"metrics"`
+	WeatherCode int       `json:"weather_code"`
+	Source      string    `json:"source"`
 }
 
-type Weather struct {
-	Temperature     float64 `json:"temperature"`
-	Humidity        int     `json:"humidity"`
-	WindSpeed       float64 `json:"windSpeed"`
-	Condition       string  `json:"condition"`
-	RainProbability float64 `json:"rainProbability"`
+type Metrics struct {
+	Temperature              float64 `json:"temperature"`
+	ApparentTemperature      float64 `json:"apparent_temperature"`
+	Humidity                 float64 `json:"humidity"`
+	WindSpeed                float64 `json:"wind_speed"`
+	Rain                     float64 `json:"rain"`
+	PrecipitationProbability float64 `json:"precipitation_probability"`
+	Visibility               float64 `json:"visibility"`
 }

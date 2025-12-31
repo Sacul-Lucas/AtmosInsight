@@ -2,19 +2,19 @@ import { getToken } from "../lib/utils/tokenValidation";
 import { API_BASE_URL } from "../../Config";
 import axios from "axios";
 
-export type GetUsersActionOutput = {
-  status: GetUsersStatus;
+export type GetWeatherLogsActionOutput = {
+  status: GetWeatherLogsStatus;
   data: any;
 };
 
-export type GetUsersStatus = 'SUCCESS' | 'USER_NOT_FOUND' | 'ACCESS_DENIED' | 'TOKEN_NOT_FOUND' | 'INVALID_TOKEN' | 'UNKNOWN';
+export type GetWeatherLogsStatus = 'SUCCESS' | 'WEATHER_LOGS_NOT_FOUND' | 'TOKEN_NOT_FOUND' | 'INVALID_TOKEN' | 'UNKNOWN';
 
 const token = getToken()
 
-export class GetUsersAction {
-    static async execute(): Promise<GetUsersActionOutput> {
+export class GetWeatherLogsAction {
+    static async execute(): Promise<GetWeatherLogsActionOutput> {
         try {
-          const response = await axios.get(`${API_BASE_URL}/users`,
+          const response = await axios.get(`${API_BASE_URL}/weather/logs`,
           {
             headers: {
               'Content-Type': 'application/json', 
@@ -28,7 +28,7 @@ export class GetUsersAction {
           if (success) {
             return { status: 'SUCCESS', data: message };
           } else {
-            return { status: 'USER_NOT_FOUND', data: message || 'Erro desconhecido' };
+            return { status: 'WEATHER_LOGS_NOT_FOUND', data: message || 'Erro desconhecido' };
           }
         } catch (error: any) {
           if (error.response && error.response.data) {
@@ -38,8 +38,6 @@ export class GetUsersAction {
               return { status: 'TOKEN_NOT_FOUND', data: message };
             } else if (message === 'Token inválido') {
               return { status: 'INVALID_TOKEN', data: message };
-            } else if (message === 'Acesso negado') {
-              return { status: 'ACCESS_DENIED', data: message };
             } else {
               return { status: 'UNKNOWN', data: message || backendError || 'Erro desconhecido' };
             }

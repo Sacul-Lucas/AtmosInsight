@@ -19,6 +19,79 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RMQ_DEFAULT_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  collector:
+    build: ./collector
+    container_name: collector
+    profiles: ["prod"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    environment:
+      NODE_ENV: ${NODE_ENV}
+
+      RABBITMQ_URL: ${RMQ_URL}
+      QUEUE_NAME: ${RMQ_QUEUE_NAME}
+      API_BASE_URL: ${API_BASE_URL}
+      LOCATIONS_ENDPOINT: ${LOCATIONS_ENDPOINT}
+      COLLECTION_INTERVAL_SECONDS: ${COLLECTION_INTERVAL_SECONDS}
+
+  collector-dev:
+    build: ./collector
+    container_name: collector-dev
+    volumes:
+      - ./collector:/app
+    profiles: ["dev"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      backend-dev:
+        condition: service_started
+    environment:
+      NODE_ENV: ${NODE_ENV}
+
+      RABBITMQ_URL: ${RMQ_URL}
+      QUEUE_NAME: ${RMQ_QUEUE_NAME}
+      API_BASE_URL: ${API_BASE_URL}
+      LOCATIONS_ENDPOINT: ${LOCATIONS_ENDPOINT}
+      COLLECTION_INTERVAL_SECONDS: ${COLLECTION_INTERVAL_SECONDS}
+
+  worker:
+    build: ./worker
+    container_name: worker
+    profiles: ["prod"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      API_URL: ${WORKER_API_URL}
+      WORKER_TOKEN: ${WORKER_TOKEN}
+      RABBITMQ_URL: ${RMQ_URL}
+
+  worker-dev:
+    build: ./worker
+    container_name: worker-dev
+    profiles: ["dev"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      backend-dev:
+        condition: service_started
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      API_URL: ${WORKER_API_URL}
+      WORKER_TOKEN: ${WORKER_TOKEN}
+      RABBITMQ_URL: ${RMQ_URL}
 
   backend:
     build: 
@@ -53,79 +126,14 @@ services:
 
       WORKER_TOKEN: ${WORKER_TOKEN}
 
-  worker:
-    build: ./worker
-    container_name: worker
-    profiles: ["prod"]
-    depends_on:
-      - rabbitmq
-      - backend
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      API_URL: ${WORKER_API_URL}
-      WORKER_TOKEN: ${WORKER_TOKEN}
-
-  worker-dev:
-    build: ./worker
-    container_name: worker-dev
-    profiles: ["dev"]
-    depends_on:
-      - backend-dev
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      API_URL: ${WORKER_API_URL}
-      WORKER_TOKEN: ${WORKER_TOKEN}
-
-  collector:
-    build: ./collector
-    container_name: collector
-    profiles: ["prod"]
-    depends_on:
-      - rabbitmq
-      - backend
-    environment:
-      NODE_ENV: ${NODE_ENV}
-
-      RABBITMQ_URL: ${RMQ_RABBITMQ_URL}
-      QUEUE_NAME: ${RMQ_QUEUE_NAME}
-      API_BASE_URL: ${RMQ_API_BASE_URL}
-      LOCATIONS_ENDPOINT: ${RMQ_LOCATIONS_ENDPOINT}
-      COLLECTION_INTERVAL_SECONDS: ${RMQ_COLLECTION_INTERVAL_SECONDS}
-
-  collector-dev:
-    build: ./collector
-    container_name: collector
-    profiles: ["dev"]
-    depends_on:
-      - rabbitmq
-      - backend-dev
-    environment:
-      NODE_ENV: ${NODE_ENV}
-
-      RABBITMQ_URL: ${RMQ_RABBITMQ_URL}
-      QUEUE_NAME: ${RMQ_QUEUE_NAME}
-      API_BASE_URL: ${RMQ_API_BASE_URL}
-      LOCATIONS_ENDPOINT: ${RMQ_LOCATIONS_ENDPOINT}
-      COLLECTION_INTERVAL_SECONDS: ${RMQ_COLLECTION_INTERVAL_SECONDS}
-
-  frontend:
-    build:
-      context: ./desafio-gdash-frontend
-      dockerfile: Dockerfile.prod
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-    container_name: frontend
-    profiles: ["prod"]
-    ports:
-      - "1000:1000"
-    depends_on:
-      - backend
-
   backend-dev:
     build: 
       context: ./desafio-gdash-backend
       dockerfile: Dockerfile.dev
+    volumes:
+      - ./desafio-gdash-backend:/app
+      - /app/node_modules
+    command: yarn start:dev
     container_name: backend-dev
     profiles: ["dev"]
     ports:
@@ -155,6 +163,20 @@ services:
 
       WORKER_TOKEN: ${WORKER_TOKEN}
 
+  frontend:
+    build:
+      context: ./desafio-gdash-frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    container_name: frontend
+    profiles: ["prod"]
+    ports:
+      - "1000:1000"
+    depends_on:
+      - backend
+
   frontend-dev:
     build:
       context: ./desafio-gdash-frontend
@@ -162,6 +184,10 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
         VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    volumes:
+      - ./desafio-gdash-frontend:/app
+      - /app/node_modules
+    command: yarn dev
     container_name: frontend-dev
     profiles: ["dev"]
     ports:

@@ -11,14 +11,13 @@ import (
 
 func sendToAPI(msg WeatherMessage) error {
 	payload := map[string]interface{}{
-		"userId":          msg.UserID,
 		"locationId":      msg.LocationID,
-		"temperature":     msg.Weather.Temperature,
-		"humidity":        msg.Weather.Humidity,
-		"windSpeed":       msg.Weather.WindSpeed,
-		"condition":       msg.Weather.Condition,
-		"rainProbability": msg.Weather.RainProbability,
-		"timestamp":       msg.Timestamp,
+		"temperature":     msg.Metrics.Temperature,
+		"humidity":        msg.Metrics.Humidity,
+		"windSpeed":       msg.Metrics.WindSpeed,
+		"condition":       msg.WeatherCode,
+		"rainProbability": msg.Metrics.PrecipitationProbability,
+		"timestamp":       msg.CollectedAt,
 	}
 
 	body, _ := json.Marshal(payload)
@@ -26,7 +25,7 @@ func sendToAPI(msg WeatherMessage) error {
 	api := os.Getenv("API_URL")
 
 	if os.Getenv("API_URL") == "" {
-		log.Fatal("Url da API não encontrado")
+		log.Fatal("API_URL not found")
 	}
 
 	req, err := http.NewRequest(

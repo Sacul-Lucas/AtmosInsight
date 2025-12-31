@@ -7,7 +7,7 @@ import (
 
 func main() {
 	if os.Getenv("WORKER_TOKEN") == "" {
-		log.Fatal("WORKER_TOKEN não definido")
+		log.Fatal("WORKER_TOKEN not defined")
 	}
 
 	startConsumer()

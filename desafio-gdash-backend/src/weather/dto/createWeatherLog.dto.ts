@@ -2,9 +2,6 @@ import { IsNumber, IsString, IsDateString } from 'class-validator';
 
 export class CreateWeatherLogDto {
   @IsString()
-  userId: string;
-
-  @IsString()
   locationId: string;
 
   @IsNumber()

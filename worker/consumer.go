@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"os"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -14,13 +16,13 @@ func processMessage(ch *amqp.Channel, msg amqp.Delivery) {
 
 	err := json.Unmarshal(msg.Body, &weatherMsg)
 	if err != nil {
-		log.Println("JSON inválido")
+		log.Println("Invalid JSON")
 		msg.Ack(false)
 		return
 	}
 
 	if !weatherMsg.IsValid() {
-		log.Println("Mensagem inválida")
+		log.Println("Invalid message")
 		msg.Ack(false)
 		return
 	}
@@ -32,7 +34,7 @@ func processMessage(ch *amqp.Channel, msg amqp.Delivery) {
 	}
 
 	msg.Ack(false)
-	log.Println("Mensagem processada com sucesso")
+	log.Println("Message processed successfully")
 }
 
 func handleRetry(ch *amqp.Channel, msg amqp.Delivery) {
@@ -47,7 +49,7 @@ func handleRetry(ch *amqp.Channel, msg amqp.Delivery) {
 	retries++
 
 	if retries > MAX_RETRIES {
-		log.Println("Max retries excedido → DLQ")
+		log.Println("Max retries exceeded → DLQ")
 
 		ch.Publish(
 			"",
@@ -85,11 +87,24 @@ func handleRetry(ch *amqp.Channel, msg amqp.Delivery) {
 	msg.Ack(false)
 }
 
-func startConsumer() {
-	conn, err := amqp.Dial("amqp://user:password@rabbitmq:5672/")
-	if err != nil {
-		log.Fatal(err)
+func connectWithRetry() *amqp.Connection {
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+
+	for {
+		conn, err := amqp.Dial(rabbitURL)
+		if err != nil {
+			log.Println("RabbitMQ unavailable, retrying in 5s...")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		log.Println("Connected to RabbitMQ")
+		return conn
 	}
+}
+
+func startConsumer() {
+	conn := connectWithRetry()
 	defer conn.Close()
 
 	ch, err := conn.Channel()
@@ -116,7 +131,7 @@ func startConsumer() {
 		log.Fatal(err)
 	}
 
-	log.Println("Worker iniciado. Aguardando mensagens...")
+	log.Println("Worker started. Waiting for messages...")
 
 	for msg := range msgs {
 		processMessage(ch, msg)

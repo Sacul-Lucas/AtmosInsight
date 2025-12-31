@@ -25,7 +25,7 @@ func declareQueues(ch *amqp.Channel) error {
 		false,
 		false,
 		amqp.Table{
-			"x-message-ttl":             int32(10000), // 10s
+			"x-message-ttl":             int64(10000), // 10s
 			"x-dead-letter-exchange":    "",
 			"x-dead-letter-routing-key": "weather.logs",
 		},
@@ -34,17 +34,5 @@ func declareQueues(ch *amqp.Channel) error {
 		return err
 	}
 
-	// Main queue
-	_, err = ch.QueueDeclare(
-		"weather.logs",
-		true,
-		false,
-		false,
-		false,
-		amqp.Table{
-			"x-dead-letter-exchange":    "",
-			"x-dead-letter-routing-key": "weather.logs.retry",
-		},
-	)
 	return err
 }

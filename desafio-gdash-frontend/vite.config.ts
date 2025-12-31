@@ -4,8 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from "path"
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
-  const isProduction = mode === 'production';
+export default defineConfig(() => {
   const isDocker = process.env.DOCKER === "true";
 
   return {
@@ -15,9 +14,7 @@ export default defineConfig(({ mode }) => {
       base: '/AtmosInsight',
       proxy: {
         '/api': {
-          target: isProduction
-            ? 'https://aceschedules.onrender.com/api'
-            : 'http://backend-dev:1500',
+          target: process.env.VITE_API_URL || 'http://localhost:1500',
           changeOrigin: true,
         },
       },

@@ -8,12 +8,14 @@ import {
   Req,
   UnauthorizedException,
   Res,
+  NotFoundException,
 } from '@nestjs/common';
 import { WeatherService } from './weather.service';
 import { CreateWeatherLogDto } from './dto/createWeatherLog.dto';
 import { QueryWeatherDto } from './dto/queryWeather.dto';
 import { WorkerGuard } from '../common/guards/worker.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ExportService } from './export/export.service';
 import type { Response } from 'express';
 import type { Request } from 'express';
@@ -34,16 +36,21 @@ export class WeatherController {
 
   // 👤 Rota do frontend
   @Get('logs')
-  @UseGuards(JwtAuthGuard)
-  findAll(@Req() req: Request, @Query() query: QueryWeatherDto, id: string) {
-    if (!req.user) {
-      throw new UnauthorizedException('Usuário não autenticado');
-    }
-
-    return this.weatherService.findAll(
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  async findAll(@Query() query: QueryWeatherDto, id: string) {
+    const weatherLogs = await this.weatherService.findAll(
       id,
       query.locationId,
     );
+
+    if (!weatherLogs || weatherLogs.length === 0) {
+      throw new NotFoundException('Não foram encontrados dados climáticos');
+    }
+
+    return {
+      success: true,
+      message: weatherLogs
+    };
   }
 
   // ---------- CSV ----------

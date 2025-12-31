@@ -33,6 +33,16 @@ dist-ssr
 
 # DEV
 # docker compose --profile dev --env-file .env.dev up --build
+# docker compose --profile dev --env-file .env.dev down -v  
+
+# docker compose --profile dev --env-file .env.dev up
+# docker compose --profile dev --env-file .env.dev down
+
+# docker compose ps
+# docker compose logs -f backend
+# docker compose restart backend
+# docker compose exec backend sh
+
 
 # PROD
 # docker composse --profile prod --env-file .env up --build -d
