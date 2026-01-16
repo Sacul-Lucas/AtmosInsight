@@ -2,12 +2,19 @@ import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 import pandas as pd
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-def fetch_weather(latitude: float, longitude: float):
-    cache_session = requests_cache.CachedSession(".cache", expire_after=3600)
+def fetch_weather(latitude: float, longitude: float, lookback_hours: int, forecast_hours: int):
+    cache_session = requests_cache.CachedSession(
+        ".cache",
+        expire_after=3600,
+    )
     retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
     client = openmeteo_requests.Client(session=retry_session)
+
+    now = datetime.now(timezone.utc)
+    start_time = now - timedelta(hours=lookback_hours)
+    end_time = now + timedelta(hours=forecast_hours)
 
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
@@ -23,12 +30,13 @@ def fetch_weather(latitude: float, longitude: float):
             "weather_code",
             "visibility",
         ],
-        "timezone": "UTC"
+        "timezone": "UTC",
+        "start_date": start_time.date().isoformat(),
+        "end_date": end_time.date().isoformat(),
     }
 
     responses = client.weather_api(url, params=params)
     response = responses[0]
-
     hourly = response.Hourly()
 
     times = pd.date_range(
@@ -38,19 +46,25 @@ def fetch_weather(latitude: float, longitude: float):
         inclusive="left",
     )
 
-    now = datetime.now(timezone.utc)
+    records = []
 
-    # pega o índice da hora mais próxima
-    index = min(range(len(times)), key=lambda i: abs(times[i] - now))
+    for index, timestamp in enumerate(times):
+        if timestamp < start_time or timestamp > end_time:
+            continue
 
-    return {
-        "timestamp": times[index].isoformat(),
-        "temperature": float(hourly.Variables(0).ValuesAsNumpy()[index]),
-        "humidity": float(hourly.Variables(1).ValuesAsNumpy()[index]),
-        "apparent_temperature": float(hourly.Variables(2).ValuesAsNumpy()[index]),
-        "precipitation_probability": float(hourly.Variables(3).ValuesAsNumpy()[index]),
-        "rain": float(hourly.Variables(4).ValuesAsNumpy()[index]),
-        "wind_speed": float(hourly.Variables(5).ValuesAsNumpy()[index]),
-        "weather_code": int(hourly.Variables(6).ValuesAsNumpy()[index]),
-        "visibility": float(hourly.Variables(7).ValuesAsNumpy()[index]),
-    }
+        record_type = "observed" if timestamp <= now else "forecast"
+
+        records.append({
+            "timestamp": timestamp.isoformat(),
+            "type": record_type,
+            "temperature": float(hourly.Variables(0).ValuesAsNumpy()[index]),
+            "humidity": float(hourly.Variables(1).ValuesAsNumpy()[index]),
+            "apparent_temperature": float(hourly.Variables(2).ValuesAsNumpy()[index]),
+            "precipitation_probability": float(hourly.Variables(3).ValuesAsNumpy()[index]),
+            "rain": float(hourly.Variables(4).ValuesAsNumpy()[index]),
+            "wind_speed": float(hourly.Variables(5).ValuesAsNumpy()[index]),
+            "weather_code": int(hourly.Variables(6).ValuesAsNumpy()[index]),
+            "visibility": float(hourly.Variables(7).ValuesAsNumpy()[index]),
+        })
+
+    return records

@@ -4,7 +4,7 @@ from locationsClient import fetch_locations
 from openMeteo import fetch_weather
 from publisher import publish
 from normalize import normalize_weather
-from config import COLLECTION_INTERVAL_SECONDS
+from config import COLLECTION_INTERVAL_SECONDS, DEFAULT_LOOKBACK_HOURS, DEFAULT_FORECAST_HOURS
 
 print("Collector starting...")
 print("Interval:", COLLECTION_INTERVAL_SECONDS)
@@ -29,12 +29,20 @@ def main():
 
             for location in locations:
                 try:
-                    raw = fetch_weather(
+                    weather_records = fetch_weather(
                         location["latitude"],
-                        location["longitude"]
+                        location["longitude"],
+                        DEFAULT_LOOKBACK_HOURS,
+                        DEFAULT_FORECAST_HOURS
                     )
-                    payload = normalize_weather(raw, location)
-                    safe_publish(payload)
+
+                    for raw in weather_records:
+                        if not isinstance(raw, dict):
+                            continue
+
+                        payload = normalize_weather(raw, location)
+                        safe_publish(payload)
+                    
                     print(f"Published weather for {location['city']}")
                 except Exception as e:
                     traceback.print_exc()

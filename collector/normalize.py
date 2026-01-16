@@ -6,7 +6,6 @@ def normalize_weather(raw, location):
             "latitude": location["latitude"],
             "longitude": location["longitude"],
         },
-        "collected_at": raw["timestamp"],
         "metrics": {
             "temperature": raw["temperature"],
             "apparent_temperature": raw["apparent_temperature"],
@@ -16,6 +15,8 @@ def normalize_weather(raw, location):
             "precipitation_probability": raw["precipitation_probability"],
             "visibility": raw["visibility"],
         },
+        "collected_at": raw["timestamp"],
         "weather_code": raw["weather_code"],
-        "source": "open-meteo"
+        "type": raw["type"],
+        "source": "open-meteo",
     }

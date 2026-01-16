@@ -1,24 +1,29 @@
-import { IsNumber, IsString, IsDateString } from 'class-validator';
+import { IsNumber, IsString, IsDateString, IsObject } from 'class-validator';
 
 export class CreateWeatherLogDto {
   @IsString()
   locationId: string;
 
-  @IsNumber()
-  temperature: number;
+  @IsDateString()
+  collectedAt: string;
 
-  @IsNumber()
-  humidity: number;
+  @IsObject()
+  metrics: {
+    temperature: number;
+    apparent_temperature: number;
+    humidity: number;
+    wind_speed: number;
+    rain: number;
+    precipitation_probability: number;
+    visibility: number;
+  };
 
-  @IsNumber()
-  windSpeed: number;
+  @IsString()
+  type: 'observed' | 'forecast';
 
   @IsString()
   condition: string;
 
-  @IsNumber()
-  rainProbability: number;
-
-  @IsDateString()
-  timestamp: string;
+  @IsString()
+  source: string;
 }

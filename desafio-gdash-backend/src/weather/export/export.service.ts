@@ -8,13 +8,14 @@ export class ExportService {
   // ---------- CSV ----------
   generateCSV(logs: WeatherLog[]): Buffer {
     const records = logs.map((log) => ({
-      date: log.timestamp.toISOString(),
+      date: log.collectedAt.toISOString(),
       locationId: log.locationId,
-      temperature: log.temperature,
-      humidity: log.humidity,
-      windSpeed: log.windSpeed,
+      temperature: log.metrics.temperature,
+      humidity: log.metrics.humidity,
+      windSpeed: log.metrics.wind_speed,
       condition: log.condition,
-      rainProbability: log.rainProbability,
+      rainProbability: log.metrics.precipitation_probability,
+      type: log.type
     }));
 
     const csv = stringify(records, {
@@ -50,13 +51,14 @@ export class ExportService {
 
     logs.forEach((log) => {
       sheet.addRow({
-        date: log.timestamp.toISOString(),
+        date: log.collectedAt.toISOString(),
         locationId: log.locationId,
-        temperature: log.temperature,
-        humidity: log.humidity,
-        windSpeed: log.windSpeed,
+        temperature: log.metrics.temperature,
+        humidity: log.metrics.humidity,
+        windSpeed: log.metrics.wind_speed,
         condition: log.condition,
-        rainProbability: log.rainProbability,
+        rainProbability: log.metrics.precipitation_probability,
+        type: log.type
       });
     });
 

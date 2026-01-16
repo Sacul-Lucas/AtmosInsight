@@ -11,10 +11,22 @@ export class WeatherService {
         private weatherModel: Model<WeatherLog>,
     ) {}
 
+    async upsert(dto: CreateWeatherLogDto) {
+        return this.weatherModel.updateOne(
+          {
+            locationId: dto.locationId,
+            collectedAt: new Date(dto.collectedAt),
+            type: dto.type,
+          },
+          { $set: dto },
+          { upsert: true },
+        );
+    }
+
     async create(dto: CreateWeatherLogDto) {
         return this.weatherModel.create({
           ...dto,
-          timestamp: new Date(dto.timestamp),
+          collectedAt: new Date(dto.collectedAt),
         });
     }
 
@@ -27,7 +39,7 @@ export class WeatherService {
 
         return this.weatherModel
             .find(filter)
-            .sort({ timestamp: -1 })
+            .sort({ collectedAt: -1 })
             .limit(500);
     }
 
@@ -41,6 +53,43 @@ export class WeatherService {
           locationId,
           timestamp: { $gte: from },
         });
+    }
+
+    async findObserved(userId: string, locationId?: string) {
+        const filter: any = { userId, type: 'observed' };
+
+        if (locationId) {
+            filter.locationId = locationId;
+        }
+
+        return this.weatherModel
+            .find(filter)
+            .sort({ collected_at: 1 })
+            .lean();
+    }
+
+    async findForecast(userId: string, locationId?: string) {
+        const filter: any = { userId, type: 'forecast' };
+
+        if (locationId) {
+            filter.locationId = locationId;
+        }
+        return this.weatherModel
+            .find(filter)
+            .sort({ collected_at: 1 })
+            .lean();
+    }
+
+    async findTimeSeries(userId: string, locationId?: string) {
+        const filter: any = { userId };
+
+        if (locationId) {
+            filter.locationId = locationId;
+        }
+        return this.weatherModel
+            .find(filter)
+            .sort({ collected_at: 1 })
+            .lean();
     }
 
     async findForExport(userId: string, locationId?: string) {

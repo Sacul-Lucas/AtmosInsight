@@ -15,7 +15,6 @@ import { CreateWeatherLogDto } from './dto/createWeatherLog.dto';
 import { QueryWeatherDto } from './dto/queryWeather.dto';
 import { WorkerGuard } from '../common/guards/worker.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ExportService } from './export/export.service';
 import type { Response } from 'express';
 import type { Request } from 'express';
@@ -31,12 +30,12 @@ export class WeatherController {
   @Post('logs')
   @UseGuards(WorkerGuard)
   create(@Body() dto: CreateWeatherLogDto) {
-    return this.weatherService.create(dto);
+    return this.weatherService.upsert(dto);
   }
 
   // 👤 Rota do frontend
   @Get('logs')
-  // @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   async findAll(@Query() query: QueryWeatherDto, id: string) {
     const weatherLogs = await this.weatherService.findAll(
       id,
@@ -50,6 +49,69 @@ export class WeatherController {
     return {
       success: true,
       message: weatherLogs
+    };
+  }
+
+  // ---------- OBSERVED ----------
+  @Get('logs/observed')
+  @UseGuards(JwtAuthGuard)
+  async getObserved(@Query() query: QueryWeatherDto, id: string) {
+    const userId = id;
+
+    const data = await this.weatherService.findObserved(
+      userId,
+      query.locationId,
+    );
+
+    if (!data || data.length === 0) {
+      throw new NotFoundException('Nenhum dado histórico encontrado');
+    }
+
+    return {
+      success: true,
+      message: data
+    };
+  }
+
+  // ---------- FORECAST ----------
+  @Get('logs/forecast')
+  @UseGuards(JwtAuthGuard)
+  async getForecast(@Query() query: QueryWeatherDto, id: string) {
+    const userId = id;
+
+    const data = await this.weatherService.findForecast(
+      userId,
+      query.locationId,
+    );
+
+    if (!data || data.length === 0) {
+      throw new NotFoundException('Nenhuma previsão encontrada');
+    }
+
+    return {
+      success: true,
+      message: data
+    };
+  }
+
+  // ---------- TIMESERIES (HISTÓRICO + PREVISÃO) ----------
+  @Get('logs/timeseries')
+  @UseGuards(JwtAuthGuard)
+  async getTimeSeries(@Query() query: QueryWeatherDto, id: string) {
+    const userId = id;
+
+    const series = await this.weatherService.findTimeSeries(
+      userId,
+      query.locationId,
+    );
+
+    if (!series || series.length === 0) {
+      throw new NotFoundException('Nenhum dado encontrado para a série temporal');
+    }
+
+    return {
+      success: true,
+      data: series
     };
   }
 

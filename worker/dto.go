@@ -6,6 +6,7 @@ type WeatherMessage struct {
 	LocationID  string    `json:"locationId"`
 	CollectedAt time.Time `json:"collected_at"`
 	Metrics     Metrics   `json:"metrics"`
+	Type        string    `json:"type"`
 	WeatherCode int       `json:"weather_code"`
 	Source      string    `json:"source"`
 }

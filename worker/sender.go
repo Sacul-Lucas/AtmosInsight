@@ -11,13 +11,12 @@ import (
 
 func sendToAPI(msg WeatherMessage) error {
 	payload := map[string]interface{}{
-		"locationId":      msg.LocationID,
-		"temperature":     msg.Metrics.Temperature,
-		"humidity":        msg.Metrics.Humidity,
-		"windSpeed":       msg.Metrics.WindSpeed,
-		"condition":       msg.WeatherCode,
-		"rainProbability": msg.Metrics.PrecipitationProbability,
-		"timestamp":       msg.CollectedAt,
+		"locationId":  msg.LocationID,
+		"collectedAt": msg.CollectedAt,
+		"metrics":     msg.Metrics,
+		"type":        msg.Type,
+		"condition":   msg.WeatherCode,
+		"source":      msg.Source,
 	}
 
 	body, _ := json.Marshal(payload)
