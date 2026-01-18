@@ -9,13 +9,14 @@ import { DashChart } from "@/Core/Components/Charts/DashChart"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import appDashboardIcon from "@/assets/icons/dashboard.svg"
+import { formatDate } from "@/Core/lib/utils/dateFormatter"
 
-type LogViewMode = 'observed' | 'forecast' | 'timeseries' | null
+// type LogViewMode = 'observed' | 'forecast' | 'timeseries' | null
 
 export const Dashboard = () => {
   const [logs, setLogs] = useState<WeatherLogs[]>([]);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<LogViewMode>('observed')
+  // const [viewMode, setViewMode] = useState<LogViewMode>('observed')
   
   const fetchLogs = async () => {
     setLoading(true);
@@ -66,18 +67,16 @@ export const Dashboard = () => {
 
         logs.forEach(log => {
           const entry =
-            map.get(log.collectedAt) || { collectedAt: log.collectedAt }
+            map.get(formatDate(log.collectedAt)) || { collectedAt: formatDate(log.collectedAt) }
         
           entry[log.type] = log.metrics[metric]
-          map.set(log.collectedAt, entry)
+          map.set(formatDate(log.collectedAt), entry)
         })
       
         return Array.from(map.values())
       }, [logs])
     )
   }
-
-  console.log(chartData('temperature'))
 
   useEffect(() => {
     fetchLogs()
@@ -127,6 +126,7 @@ export const Dashboard = () => {
           <DashChart 
             chartTitle="Gráfico de temperaturas" 
             chartData={chartData('temperature')}
+            chartUnit="C°"
             chartConfig={{
               observed: {
                 label: "Observado",
@@ -141,9 +141,6 @@ export const Dashboard = () => {
                   light: "#2563eb",
                   dark: "#60a5fa"
                 }
-              },
-              unit: {
-                label: "°C"
               }
             }}
           />
@@ -153,6 +150,7 @@ export const Dashboard = () => {
           <DashChart 
             chartTitle="Gráfico de probabilidade de chuva" 
             chartData={chartData('precipitation_probability')}
+            chartUnit="%"
             chartConfig={{
               observed: {
                 label: "Observado",
@@ -167,9 +165,6 @@ export const Dashboard = () => {
                   light: "#0ea5e9",
                   dark: "#7dd3fc"
                 }
-              },
-              unit: {
-                label: "%"
               }
             }}
           />

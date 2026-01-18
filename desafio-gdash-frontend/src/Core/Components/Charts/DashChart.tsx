@@ -25,13 +25,15 @@ interface DashChartProps {
   chartConfig: ChartConfig
   chartPanelHeight?: string
   chartContainerHeight?: string
+  chartUnit?: string
 }
 
 export const DashChart: React.FC<DashChartProps> = ({
   chartTitle,
   chartData,
   chartConfig,
-  chartPanelHeight = "45dvh"
+  chartPanelHeight = "45dvh",
+  chartUnit
 }) => {
   return (
     <ResizablePanelGroup
@@ -58,15 +60,35 @@ export const DashChart: React.FC<DashChartProps> = ({
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={(value: string) =>
-                    new Date(value).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })
-                  }
+                  tickFormatter={(value: string) => value.slice(11, 17)}
                 />
 
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip 
+                  content={
+                    <ChartTooltipContent 
+                      formatter={(value, name) => (
+                        <>
+                          <div
+                            className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-(--color-bg)"
+                            style={
+                              {
+                                "--color-bg": `var(--color-${name})`,
+                              } as React.CSSProperties
+                            }
+                          />
+                          {chartConfig[name as keyof typeof chartConfig]?.label ||
+                            name}
+                          <div className="text-foreground ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums">
+                            {Math.floor(Number(value))}
+                            <span className="text-muted-foreground font-normal">
+                              {chartUnit}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    />
+                  }
+                />
                 <ChartLegend content={<ChartLegendContent />} />
 
                 <Bar
