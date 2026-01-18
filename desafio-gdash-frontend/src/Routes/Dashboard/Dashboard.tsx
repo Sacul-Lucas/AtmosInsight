@@ -134,6 +134,26 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
+        <AppSidebarCard cardTitle="Sensação térmica" cardWidth="w-full" cardDescription="Medida da temperatura aparente sentida pelo corpo">
+          <span>
+            {loading || !latestObserved ? 
+              (<Skeleton className="h-6"/>) 
+              : 
+              `${Math.floor(latestObserved.metrics.apparent_temperature)}°C`
+            }
+          </span>
+        </AppSidebarCard>
+
+        <AppSidebarCard cardTitle="Visibilidade" cardWidth="w-full" cardDescription="Distância de visibilidade, que pode ser influenciada por nuvens baixas, humidade e aerossóis">
+          <span>
+            {loading || !latestObserved ? 
+              (<Skeleton className="h-6"/>) 
+              : 
+              `${latestObserved.metrics.visibility}m`
+            }
+          </span>
+        </AppSidebarCard>
+
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
             chartTitle="Gráfico de temperaturas" 
@@ -176,6 +196,54 @@ export const Dashboard = () => {
                 theme: {
                   light: "#0ea5e9",
                   dark: "#7dd3fc"
+                }
+              }
+            }}
+          />
+        </AppSidebarCard>
+
+        <AppSidebarCard cardWidth="w-full">
+          <DashChart 
+            chartTitle="Gráfico de sensação térmica" 
+            chartData={chartData('apparent_temperature')}
+            chartUnit="°C"
+            chartConfig={{
+              observed: {
+                label: "Observado",
+                theme: {
+                  light: "#dc2626",
+                  dark: "#F54E4E"
+                }
+              },
+              forecast: {
+                label: "Previsão",
+                theme: {
+                  light: "#2563eb",
+                  dark: "#506BF2"
+                }
+              }
+            }}
+          />
+        </AppSidebarCard>
+
+        <AppSidebarCard cardWidth="w-full">
+          <DashChart 
+            chartTitle="Gráfico de humidade do ar" 
+            chartData={chartData('humidity')}
+            chartUnit="%"
+            chartConfig={{
+              observed: {
+                label: "Observado",
+                theme: {
+                  light: "#90BAF9",
+                  dark: "#8EB9FB"
+                }
+              },
+              forecast: {
+                label: "Previsão",
+                theme: {
+                  light: "#5193F5",
+                  dark: "#629EF9"
                 }
               }
             }}
