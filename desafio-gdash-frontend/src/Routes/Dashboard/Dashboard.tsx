@@ -60,26 +60,38 @@ export const Dashboard = () => {
   }, [logs])
 
   const chartData = (dataType: keyof WeatherLogs["metrics"]) => {
-    return (
-      useMemo(() => {
-        const map = new Map<string, any>()
-        const metric = dataType
+    return useMemo(() => {
+      const map = new Map<number, any>()
 
-        logs.forEach(log => {
-          const entry =
-            map.get(formatDate(log.collectedAt)) || { collectedAt: formatDate(log.collectedAt) }
-        
-          entry[log.type] = log.metrics[metric]
-          map.set(formatDate(log.collectedAt), entry)
-        })
-      
-        return Array.from(map.values())
-      }, [logs])
-    )
+      logs.forEach(log => {
+        const timestamp = new Date(log.collectedAt).getTime()
+
+        const entry =
+          map.get(timestamp) || {
+            collectedAt: log.collectedAt,
+            formattedCollectedAt: formatDate(log.collectedAt),
+          }
+
+        entry[log.type] = log.metrics[dataType]
+        map.set(timestamp, entry)
+      })
+
+      return Array.from(map.values()).sort(
+        (a, b) =>
+          new Date(a.collectedAt).getTime() -
+          new Date(b.collectedAt).getTime()
+      )
+    }, [logs, dataType])
   }
 
   useEffect(() => {
     fetchLogs()
+  
+    const interval = setInterval(() => {
+      fetchLogs()
+    }, 5 * 60 * 1000)
+  
+    return () => clearInterval(interval)
   }, [])
   
   return (

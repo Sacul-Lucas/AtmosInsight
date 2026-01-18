@@ -15,6 +15,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis } from "rechar
 
 interface DashChartDataPoint {
   collectedAt: string
+  formattedCollectedAt: string
   observed?: number
   forecast?: number
 }
@@ -60,12 +61,21 @@ export const DashChart: React.FC<DashChartProps> = ({
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={(value: string) => value.slice(11, 17)}
+                  tickFormatter={(value) =>
+                    new Intl.DateTimeFormat("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    }).format(new Date(value))
+                  }
                 />
 
                 <ChartTooltip 
                   content={
                     <ChartTooltipContent 
+                      labelFormatter={(_, payload) =>
+                        payload?.[0]?.payload?.formattedCollectedAt ?? "-"
+                      }
                       formatter={(value, name) => (
                         <>
                           <div
