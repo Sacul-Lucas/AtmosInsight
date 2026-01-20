@@ -12,6 +12,8 @@ import {
   ResizablePanelGroup,
 } from "@/Core/Components/shadcnComponents/Ui/resizable"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis } from "recharts"
+import { chartAverage } from "@/Core/lib/utils/calcs"
+import React from "react"
 
 interface DashChartDataPoint {
   collectedAt: string
@@ -22,6 +24,7 @@ interface DashChartDataPoint {
 
 interface DashChartProps {
   chartTitle: string
+  chartDescription?: string
   chartData: DashChartDataPoint[]
   chartConfig: ChartConfig
   chartPanelHeight?: string
@@ -31,11 +34,37 @@ interface DashChartProps {
 
 export const DashChart: React.FC<DashChartProps> = ({
   chartTitle,
+  chartDescription,
   chartData,
   chartConfig,
   chartPanelHeight = "45dvh",
   chartUnit
 }) => {
+  const [activeChart, setActiveChart] = React.useState<keyof typeof chartConfig>("observed")
+  const chartKeys = ["observed", "forecast", "both"] as const
+
+  const averages = React.useMemo(() => {
+    return {
+      observed: chartAverage(
+        chartData
+          .map(d => d.observed)
+          .filter((v): v is number => v !== undefined)
+      ),
+
+      forecast: chartAverage(
+        chartData
+          .map(d => d.forecast)
+          .filter((v): v is number => v !== undefined)
+      ),
+
+      both: chartAverage(
+        chartData
+          .flatMap(d => [d.observed, d.forecast])
+          .filter((v): v is number => v !== undefined)
+      )
+    }
+  }, [chartData])
+
   return (
     <ResizablePanelGroup
       direction="vertical"
@@ -44,9 +73,29 @@ export const DashChart: React.FC<DashChartProps> = ({
         height: chartPanelHeight
       } }
     >
-      <ResizablePanel defaultSize={25}>
-        <div className="flex h-full items-center justify-center p-6">
-            <span className="font-semibold">{chartTitle}</span>
+      <ResizablePanel defaultSize={30} className="flex items-center w-full flex-row">
+        <div className="flex flex-col h-full p-6 gap-2">
+          <span className="leading-none font-semibold">{chartTitle}</span>
+          <span className="text-muted-foreground text-sm">{chartDescription}</span>
+        </div>
+        <div className="flex ml-auto">
+          {chartKeys.map((chart) => {
+            return (
+              <button
+                key={chart}
+                data-active={activeChart === chart}
+                className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                onClick={() => setActiveChart(chart)}
+              >
+                <span className="text-muted-foreground text-xs">
+                  {chartConfig[chart].label}
+                </span>
+                <span className="text-lg leading-none font-bold sm:text-xl">
+                  {Math.floor(averages[chart]).toLocaleString() + chartUnit}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </ResizablePanel>
       <ResizableHandle />
@@ -55,12 +104,12 @@ export const DashChart: React.FC<DashChartProps> = ({
           <ChartContainer config={chartConfig satisfies ChartConfig} className="w-full h-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart accessibilityLayer data={chartData}>
-                <CartesianGrid />
+                <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="collectedAt"
                   tickLine={false}
                   axisLine={false}
-                  tickMargin={8}
+                  tickMargin={10}
                   tickFormatter={(value) =>
                     new Intl.DateTimeFormat("pt-BR", {
                       hour: "2-digit",
@@ -101,17 +150,23 @@ export const DashChart: React.FC<DashChartProps> = ({
                 />
                 <ChartLegend content={<ChartLegendContent />} />
 
-                <Bar
-                  dataKey="observed"
-                  fill="var(--color-observed)"
-                  radius={4}
-                />
+                {activeChart == 'both' ? (
+                  <>
+                    <Bar
+                      dataKey="observed"
+                      fill="var(--color-observed)"
+                      radius={4}
+                    />
 
-                <Bar
-                  dataKey="forecast"
-                  fill="var(--color-forecast)"
-                  radius={4}
-                />
+                    <Bar
+                      dataKey="forecast"
+                      fill="var(--color-forecast)"
+                      radius={4}
+                    />
+                  </>
+                ) : (
+                  <Bar dataKey={activeChart} fill={`var(--color-${activeChart})`} radius={4}/>
+                )}
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>

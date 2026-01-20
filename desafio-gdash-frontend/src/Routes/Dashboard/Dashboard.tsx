@@ -106,7 +106,7 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
-        <AppSidebarCard cardTitle="Umidade do ar" cardWidth="w-full" cardDescription="Porcentagem atual de humidade do ar">
+        <AppSidebarCard cardTitle="Umidade do ar" cardWidth="w-full" cardDescription="Porcentagem atual de umidade do ar">
           <span>
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) : 
@@ -144,7 +144,7 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
-        <AppSidebarCard cardTitle="Visibilidade" cardWidth="w-full" cardDescription="Distância de visibilidade, que pode ser influenciada por nuvens baixas, humidade e aerossóis">
+        <AppSidebarCard cardTitle="Visibilidade" cardWidth="w-full" cardDescription="Distância de visibilidade, que pode ser influenciada por nuvens baixas, umidade e aerossóis">
           <span>
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) 
@@ -156,7 +156,8 @@ export const Dashboard = () => {
 
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
-            chartTitle="Gráfico de temperaturas" 
+            chartTitle="Gráfico em barras - Temperaturas" 
+            chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('temperature')}
             chartUnit="C°"
             chartConfig={{
@@ -173,6 +174,9 @@ export const Dashboard = () => {
                   light: "#2563eb",
                   dark: "#60a5fa"
                 }
+              },
+              both: {
+                label: "Ambos"
               }
             }}
           />
@@ -180,7 +184,8 @@ export const Dashboard = () => {
 
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
-            chartTitle="Gráfico de probabilidade de chuva" 
+            chartTitle="Gráfico em barras - Probabilidade de chuva" 
+            chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('precipitation_probability')}
             chartUnit="%"
             chartConfig={{
@@ -197,6 +202,9 @@ export const Dashboard = () => {
                   light: "#0ea5e9",
                   dark: "#7dd3fc"
                 }
+              },
+              both: {
+                label: "Ambos"
               }
             }}
           />
@@ -204,7 +212,8 @@ export const Dashboard = () => {
 
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
-            chartTitle="Gráfico de sensação térmica" 
+            chartTitle="Gráfico em barras - Sensação térmica" 
+            chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('apparent_temperature')}
             chartUnit="°C"
             chartConfig={{
@@ -221,6 +230,9 @@ export const Dashboard = () => {
                   light: "#2563eb",
                   dark: "#506BF2"
                 }
+              },
+              both: {
+                label: "Ambos"
               }
             }}
           />
@@ -228,7 +240,8 @@ export const Dashboard = () => {
 
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
-            chartTitle="Gráfico de humidade do ar" 
+            chartTitle="Gráfico em barras - Umidade do ar" 
+            chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('humidity')}
             chartUnit="%"
             chartConfig={{
@@ -245,6 +258,9 @@ export const Dashboard = () => {
                   light: "#5193F5",
                   dark: "#629EF9"
                 }
+              },
+              both: {
+                label: "Ambos"
               }
             }}
           />
