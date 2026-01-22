@@ -14,6 +14,7 @@ import {
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis } from "recharts"
 import { chartAverage } from "@/Core/lib/utils/calcs"
 import React from "react"
+import { ChartTypes } from "./chartTypes"
 
 interface DashChartDataPoint {
   collectedAt: string
@@ -24,6 +25,7 @@ interface DashChartDataPoint {
 
 interface DashChartProps {
   chartTitle: string
+  chartType: string
   chartDescription?: string
   chartData: DashChartDataPoint[]
   chartConfig: ChartConfig
@@ -34,6 +36,7 @@ interface DashChartProps {
 
 export const DashChart: React.FC<DashChartProps> = ({
   chartTitle,
+  chartType,
   chartDescription,
   chartData,
   chartConfig,
@@ -64,6 +67,42 @@ export const DashChart: React.FC<DashChartProps> = ({
       )
     }
   }, [chartData])
+
+  const filteredChartData = React.useMemo(() => {
+    const now = new Date()
+
+    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000)
+    const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+
+    return chartData.filter(item => {
+      const collectedDate = new Date(item.collectedAt)
+
+      switch (activeChart) {
+        case "observed":
+          return (
+            collectedDate >= sixHoursAgo &&
+            collectedDate <= now &&
+            item.observed !== undefined
+          )
+
+        case "forecast":
+          return (
+            collectedDate > now &&
+            collectedDate <= next24Hours &&
+            item.forecast !== undefined
+          )
+
+        case "both":
+          return (
+            collectedDate >= sixHoursAgo &&
+            collectedDate <= next24Hours
+          )
+
+        default:
+          return true
+      }
+    })
+  }, [chartData, activeChart])
 
   return (
     <ResizablePanelGroup
@@ -101,75 +140,7 @@ export const DashChart: React.FC<DashChartProps> = ({
       <ResizableHandle />
       <ResizablePanel defaultSize={75}>
         <div className="flex h-full items-center justify-center p-6">
-          <ChartContainer config={chartConfig satisfies ChartConfig} className="w-full h-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart accessibilityLayer data={chartData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="collectedAt"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  tickFormatter={(value) =>
-                    new Intl.DateTimeFormat("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    }).format(new Date(value))
-                  }
-                />
-
-                <ChartTooltip 
-                  content={
-                    <ChartTooltipContent 
-                      labelFormatter={(_, payload) =>
-                        payload?.[0]?.payload?.formattedCollectedAt ?? "-"
-                      }
-                      formatter={(value, name) => (
-                        <>
-                          <div
-                            className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-(--color-bg)"
-                            style={
-                              {
-                                "--color-bg": `var(--color-${name})`,
-                              } as React.CSSProperties
-                            }
-                          />
-                          {chartConfig[name as keyof typeof chartConfig]?.label ||
-                            name}
-                          <div className="text-foreground ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums">
-                            {Math.floor(Number(value))}
-                            <span className="text-muted-foreground font-normal">
-                              {chartUnit}
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    />
-                  }
-                />
-                <ChartLegend content={<ChartLegendContent />} />
-
-                {activeChart == 'both' ? (
-                  <>
-                    <Bar
-                      dataKey="observed"
-                      fill="var(--color-observed)"
-                      radius={4}
-                    />
-
-                    <Bar
-                      dataKey="forecast"
-                      fill="var(--color-forecast)"
-                      radius={4}
-                    />
-                  </>
-                ) : (
-                  <Bar dataKey={activeChart} fill={`var(--color-${activeChart})`} radius={4}/>
-                )}
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+          <ChartTypes activeChart={activeChart} chartUnit={chartUnit} chartConfig={chartConfig} chartType={chartType} filteredChartData={filteredChartData}/>
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>

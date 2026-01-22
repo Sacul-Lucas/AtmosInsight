@@ -11,12 +11,9 @@ import { toast } from "sonner"
 import appDashboardIcon from "@/assets/icons/dashboard.svg"
 import { formatDate } from "@/Core/lib/utils/dateFormatter"
 
-// type LogViewMode = 'observed' | 'forecast' | 'timeseries' | null
-
 export const Dashboard = () => {
   const [logs, setLogs] = useState<WeatherLogs[]>([]);
   const [loading, setLoading] = useState(false);
-  // const [viewMode, setViewMode] = useState<LogViewMode>('observed')
   
   const fetchLogs = async () => {
     setLoading(true);
@@ -157,6 +154,7 @@ export const Dashboard = () => {
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
             chartTitle="Gráfico em barras - Temperaturas" 
+            chartType="Bar"
             chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('temperature')}
             chartUnit="C°"
@@ -184,7 +182,8 @@ export const Dashboard = () => {
 
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
-            chartTitle="Gráfico em barras - Probabilidade de chuva" 
+            chartTitle="Gráfico em área - Probabilidade de chuva" 
+            chartType="Area"
             chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('precipitation_probability')}
             chartUnit="%"
@@ -213,6 +212,7 @@ export const Dashboard = () => {
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
             chartTitle="Gráfico em barras - Sensação térmica" 
+            chartType="Bar"
             chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('apparent_temperature')}
             chartUnit="°C"
@@ -240,7 +240,8 @@ export const Dashboard = () => {
 
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
-            chartTitle="Gráfico em barras - Umidade do ar" 
+            chartTitle="Gráfico em linhas - Umidade do ar" 
+            chartType="Line"
             chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('humidity')}
             chartUnit="%"
