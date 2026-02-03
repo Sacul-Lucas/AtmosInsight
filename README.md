@@ -263,7 +263,7 @@ Infraestrutura
 
 - `Código preparado para escalabilidade`
 
-# 🎯 Objetivo do projeto no portfólio
+# 🎯 Objetivo do projeto
 
 Este projeto demonstra competências em:
 

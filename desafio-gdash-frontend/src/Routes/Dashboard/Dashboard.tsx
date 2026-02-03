@@ -6,10 +6,10 @@ import { Toaster } from "@/Core/Components/shadcnComponents/Ui/sonner"
 import { WeatherCodes } from "@/Core/lib/utils/weatherConditionCodes"
 import type { WeatherLogs } from "@/Core/lib/types/WeatherLogs"
 import { DashChart } from "@/Core/Components/Charts/DashChart"
+import { formatDate } from "@/Core/lib/utils/dateFormatter"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import appDashboardIcon from "@/assets/icons/dashboard.svg"
-import { formatDate } from "@/Core/lib/utils/dateFormatter"
 
 export const Dashboard = () => {
   const [logs, setLogs] = useState<WeatherLogs[]>([]);
@@ -58,22 +58,45 @@ export const Dashboard = () => {
 
   const chartData = (dataType: keyof WeatherLogs["metrics"]) => {
     return useMemo(() => {
-      const map = new Map<number, any>()
+      const now = new Date().getTime()
 
-      logs.forEach(log => {
+      const SIX_HOURS = 6 * 60 * 60 * 1000
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
+
+      const minTime = now - SIX_HOURS
+      const maxTime = now + TWENTY_FOUR_HOURS
+
+      const grouped: Record<
+        string,
+        {
+          collectedAt: string
+          formattedCollectedAt: string
+          observed?: number
+          forecast?: number
+        }
+      > = {}
+
+      for (const log of logs) {
         const timestamp = new Date(log.collectedAt).getTime()
 
-        const entry =
-          map.get(timestamp) || {
+        if (timestamp < minTime || timestamp > maxTime) continue
+
+        if (log.type === "forecast" && timestamp <= now) continue
+        if (log.type === "observed" && timestamp > now) continue
+
+        const key = log.collectedAt
+
+        if (!grouped[key]) {
+          grouped[key] = {
             collectedAt: log.collectedAt,
             formattedCollectedAt: formatDate(log.collectedAt),
           }
+        }
 
-        entry[log.type] = log.metrics[dataType]
-        map.set(timestamp, entry)
-      })
+        grouped[key][log.type] = log.metrics[dataType]
+      }
 
-      return Array.from(map.values()).sort(
+      return Object.values(grouped).sort(
         (a, b) =>
           new Date(a.collectedAt).getTime() -
           new Date(b.collectedAt).getTime()
@@ -182,7 +205,7 @@ export const Dashboard = () => {
 
         <AppSidebarCard cardWidth="w-full">
           <DashChart 
-            chartTitle="Gráfico em área - Probabilidade de chuva" 
+            chartTitle="Gráfico em área - Probabilidade de precipitação" 
             chartType="Area"
             chartDescription="Exibindo valores das últimas 6 horas e das próximas 24 horas"
             chartData={chartData('precipitation_probability')}

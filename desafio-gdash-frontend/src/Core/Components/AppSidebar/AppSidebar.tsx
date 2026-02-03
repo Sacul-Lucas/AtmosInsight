@@ -1,4 +1,4 @@
-import { Calendar, ChevronUp, Home, Search, Settings, User2, LayoutDashboardIcon, Shield } from "lucide-react"
+import { ChevronUp, Home, Settings, User2, LayoutDashboardIcon, Shield } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -35,16 +35,6 @@ const items = [
     url: "/AtmosInsight/Administration",
     icon: Shield,
     roles: ["admin"]
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
   },
   {
     title: "Configurações",

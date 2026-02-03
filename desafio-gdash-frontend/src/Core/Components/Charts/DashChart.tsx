@@ -1,20 +1,12 @@
-import { 
-  ChartContainer, 
-  type ChartConfig, 
-  ChartTooltip, 
-  ChartTooltipContent, 
-  ChartLegend, 
-  ChartLegendContent 
-} from "@/Core/Components/shadcnComponents/Ui/chart"
+import { type ChartConfig, } from "@/Core/Components/shadcnComponents/Ui/chart"
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/Core/Components/shadcnComponents/Ui/resizable"
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis } from "recharts"
 import { chartAverage } from "@/Core/lib/utils/calcs"
+import { ChartTypes } from "./ChartTypes"
 import React from "react"
-import { ChartTypes } from "./chartTypes"
 
 interface DashChartDataPoint {
   collectedAt: string
