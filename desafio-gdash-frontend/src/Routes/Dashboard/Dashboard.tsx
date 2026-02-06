@@ -58,31 +58,43 @@ export const Dashboard = () => {
 
   const chartData = (dataType: keyof WeatherLogs["metrics"]) => {
     return useMemo(() => {
-      const now = new Date().getTime()
+      const now = new Date()
+
+      const nowHour = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        now.getHours(),
+        0,
+        0,
+        0
+      ).getTime()
 
       const SIX_HOURS = 6 * 60 * 60 * 1000
       const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000
 
-      const minTime = now - SIX_HOURS
-      const maxTime = now + TWENTY_FOUR_HOURS
+      const minTime = nowHour - SIX_HOURS
+      const maxTime = nowHour + TWENTY_FOUR_HOURS
 
-      const grouped: Record<
-        string,
-        {
-          collectedAt: string
-          formattedCollectedAt: string
-          observed?: number
-          forecast?: number
-        }
-      > = {}
+      const grouped: Record<string, any> = {}
 
       for (const log of logs) {
-        const timestamp = new Date(log.collectedAt).getTime()
+        const collected = new Date(log.collectedAt)
+
+        const timestamp = new Date(
+        collected.getFullYear(),
+        collected.getMonth(),
+        collected.getDate(),
+        collected.getHours(),
+        0,
+        0,
+        0
+      ).getTime()
 
         if (timestamp < minTime || timestamp > maxTime) continue
 
-        if (log.type === "forecast" && timestamp <= now) continue
-        if (log.type === "observed" && timestamp > now) continue
+        if (log.type === "forecast" && timestamp < nowHour) continue
+        if (log.type === "observed" && timestamp > nowHour) continue
 
         const key = log.collectedAt
 

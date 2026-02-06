@@ -61,39 +61,19 @@ export const DashChart: React.FC<DashChartProps> = ({
   }, [chartData])
 
   const filteredChartData = React.useMemo(() => {
-    const now = new Date()
-
-    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000)
-    const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000)
-
-    return chartData.filter(item => {
-      const collectedDate = new Date(item.collectedAt)
-
-      switch (activeChart) {
-        case "observed":
-          return (
-            collectedDate >= sixHoursAgo &&
-            collectedDate <= now &&
-            item.observed !== undefined
-          )
-
-        case "forecast":
-          return (
-            collectedDate > now &&
-            collectedDate <= next24Hours &&
-            item.forecast !== undefined
-          )
-
-        case "both":
-          return (
-            collectedDate >= sixHoursAgo &&
-            collectedDate <= next24Hours
-          )
-
-        default:
-          return true
-      }
-    })
+    switch (activeChart) {
+      case "observed":
+        return chartData.filter(d => d.observed !== undefined)
+    
+      case "forecast":
+        return chartData.filter(d => d.forecast !== undefined)
+    
+      case "both":
+        return chartData
+    
+      default:
+        return chartData
+    }
   }, [chartData, activeChart])
 
   return (
@@ -115,7 +95,7 @@ export const DashChart: React.FC<DashChartProps> = ({
               <button
                 key={chart}
                 data-active={activeChart === chart}
-                className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6 cursor-pointer"
                 onClick={() => setActiveChart(chart)}
               >
                 <span className="text-muted-foreground text-xs">
