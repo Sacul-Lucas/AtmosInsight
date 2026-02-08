@@ -5,15 +5,21 @@ import { AppSidebarCard } from "@/Core/Components/Cards/AppSidebarCard"
 import { Toaster } from "@/Core/Components/shadcnComponents/Ui/sonner"
 import { WeatherCodes } from "@/Core/lib/utils/weatherConditionCodes"
 import type { WeatherLogs } from "@/Core/lib/types/WeatherLogs"
+import type { Insights } from "@/Core/lib/types/Insights"
 import { DashChart } from "@/Core/Components/Charts/DashChart"
 import { formatDate } from "@/Core/lib/utils/dateFormatter"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import appDashboardIcon from "@/assets/icons/dashboard.svg"
+import { GetInsightsAction } from "@/Core/Actions/GetInsightsAction"
+import { Button } from "@/Core/Components/shadcnComponents/Ui/button"
 
 export const Dashboard = () => {
   const [logs, setLogs] = useState<WeatherLogs[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingInisghts, setLoadingInisghts] = useState(false);
+
+  const [insights, setInsights] = useState<Insights>();
   
   const fetchLogs = async () => {
     setLoading(true);
@@ -44,6 +50,49 @@ export const Dashboard = () => {
         break;
     }
     setLoading(false);
+  };
+
+  const getInsights = async () => {
+    if (loadingInisghts) return;
+
+    const cacheKey = 'dashboard:insights';
+    const cached = sessionStorage.getItem(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+
+      if (Date.now() < parsed.expiresAt) {
+        setInsights(parsed);
+        return;
+      }
+    }
+
+    setLoadingInisghts(true);
+
+    const getInsightsRes = await GetInsightsAction.execute();
+    const getInsightsMessage = getInsightsRes.data;
+
+    switch (getInsightsRes.status) {
+      case 'SUCCESS':
+        setInsights(getInsightsMessage);
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify(getInsightsMessage),
+        );
+        break;
+
+      case 'INSIGHTS_NOT_FOUND':
+      case 'TOKEN_NOT_FOUND':
+      case 'INVALID_TOKEN':
+      case 'UNKNOWN':
+        toast.error(getInsightsMessage, {
+          className:
+            '!bg-red-700 !border-red-800 !text-white !align-middle',
+        });
+        break;
+    }
+
+    setLoadingInisghts(false);
   };
 
   const latestObserved = useMemo(() => {
@@ -128,7 +177,45 @@ export const Dashboard = () => {
   
   return (
     <AppSidebarBody appSidebarTitle="AtmosInsight - Dashboard" appSidebarIcon={appDashboardIcon} appSidebarBodyStyle="flex-col">
+      <div className="mt-8 xl:max-w-[90%]! h-auto w-full justify-center items-center align-middle">
+        <div className="space-y-0.5">
+          <div className="flex flex-row">
+            <h1 className="text-2xl leading-none font-medium">Dashboard</h1>
+            <Button onClick={getInsights} disabled={loadingInisghts} className="flex ml-auto cursor-pointer">
+              {loadingInisghts ? 'Gerando insights…' : 'Gerar insights de IA'}
+            </Button>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            {`Últimas informações climáticas coletadas da API pública. Fonte: ${loading || !latestObserved ? (<Skeleton className="h-6"/>) : latestObserved.source}`}
+          </p>
+        </div>
+      </div>
+
       <div className='gap-4 grid-cols-[repeat(2,1fr)] grid mt-8 xl:max-w-[90%]! h-auto w-full justify-center items-center align-middle'>
+        {insights && (
+          <>
+            <AppSidebarCard cardTitle="Tendência" cardWidth="w-full" cardDescription="Tendência da mudança da temperatura" >
+              <span>
+                {loadingInisghts ? 
+                  (<Skeleton className="h-6"/>) 
+                  : 
+                  `${insights.trend}`
+                }
+              </span>
+            </AppSidebarCard>
+
+            <AppSidebarCard cardTitle="Conforto" cardWidth="w-full" cardDescription="Indíce de conforto calculado" >
+              <span>
+                {loadingInisghts ? 
+                  (<Skeleton className="h-6"/>) 
+                  : 
+                  `${insights.comfortIndex}`
+                }
+              </span>
+            </AppSidebarCard>
+          </>
+        )}
+
         <AppSidebarCard cardTitle="Temperatura Atual" cardWidth="w-full" cardDescription="Valor medido pelo sensor de temperatura">
           <span>
             {loading || !latestObserved ? 

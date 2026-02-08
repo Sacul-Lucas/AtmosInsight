@@ -3,8 +3,8 @@ export function calculateAverage(logs: any[]) {
     (acc, l) => {
       acc.temperature += l.temperature;
       acc.humidity += l.humidity;
-      acc.rainProbability += l.rainProbability;
-      acc.windSpeed += l.windSpeed;
+      acc.precipitation_probability += l.precipitation_probability;
+      acc.wind_speed += l.wind_speed;
       return acc;
     },
     { temperature: 0, humidity: 0, rainProbability: 0, windSpeed: 0 },
@@ -15,7 +15,7 @@ export function calculateAverage(logs: any[]) {
   return {
     temperature: +(sum.temperature / count).toFixed(1),
     humidity: Math.round(sum.humidity / count),
-    rainProbability: +(sum.rainProbability / count).toFixed(2),
-    windSpeed: +(sum.windSpeed / count).toFixed(1)
+    rainProbability: +(sum.precipitation_probability / count).toFixed(2),
+    windSpeed: +(sum.wind_speed / count).toFixed(1)
   };
 }

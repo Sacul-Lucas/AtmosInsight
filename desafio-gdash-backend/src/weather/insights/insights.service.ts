@@ -1,46 +1,101 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  HttpException, 
+  HttpStatus 
+} from '@nestjs/common';
 import { WeatherService } from '../weather.service';
 import { calculateAverage } from './calculators/average.calculator';
 import { calculateTrend } from './calculators/trend.calculator';
 import { calculateComfort } from './calculators/comfort.calculator';
 import { InsightDTO } from './dto/insight.dto';
-import axios from 'axios';
+import { GoogleGenAI } from '@google/genai';
+
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 @Injectable()
 export class InsightsService {
   constructor(private readonly weatherService: WeatherService) {}
 
-  async generate(userId: string, locationId: string): Promise<InsightDTO> {
-    const from = new Date();
-    from.setDate(from.getDate() - 7); // últimos 7 dias
+  private static globalLock = false;
+  private static locks = new Set<string>();
+  private static cache = new Map<
+    string,
+    { data: InsightDTO & { expiresAt: number }; expiresAt: number }
+  >();
 
-    const logs = await this.weatherService.findByPeriod(userId, locationId, from);
+  async generate(userId: string, locationId: string): Promise<InsightDTO & { expiresAt: number }> {
+    const cacheKey = `${userId}:${locationId}`;
+    const now = Date.now();
 
-    if (logs.length === 0) {
-      throw new InternalServerErrorException('Dados insuficientes para gerar insights');
+    const cached = InsightsService.cache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.data;
     }
 
-    const avg = calculateAverage(logs);
-    const trend = calculateTrend(logs);
-    const comfort = calculateComfort(avg.temperature, avg.humidity);
+    if (InsightsService.locks.has(cacheKey)) {
+      throw new InternalServerErrorException(
+        'Insights já estão sendo gerados. Aguarde a próxima atualização.',
+      );
+    }
 
-    const alerts = [];
-    if (avg.rainProbability > 0.7) alerts.push('Alta chance de chuva');
-    if (avg.temperature > 32) alerts.push('Calor extremo');
-    if (avg.temperature < 10) alerts.push('Frio intenso');
+    InsightsService.locks.add(cacheKey);
 
-    const prompt = this.buildPrompt(logs, avg, trend, comfort, alerts);
+    try {
+      const logs = await this.weatherService.findObserved(userId, locationId);
 
-    const aiHTML = await this.callAI(prompt);
+      if (!logs || logs.length === 0) {
+        throw new InternalServerErrorException(
+          'Dados insuficientes para gerar insights',
+        );
+      }
 
-    return {
-      period: 'last_7_days',
-      average: avg,
-      trend,
-      comfortIndex: comfort,
-      alerts,
-      summaryHTML: aiHTML,
-    };
+      const avg = calculateAverage(logs);
+      const trend = calculateTrend(logs);
+      const comfort = calculateComfort(avg.temperature, avg.humidity);
+
+      const alerts: string[] = [];
+      if (avg.rainProbability > 0.7) alerts.push('Alta chance de chuva');
+      if (avg.temperature > 32) alerts.push('Calor extremo');
+      if (avg.temperature < 10) alerts.push('Frio intenso');
+
+      const prompt = this.buildPrompt(logs, avg, trend, comfort, alerts);
+      const aiHTML = await this.callAI(prompt);
+
+      const expiresAt = this.getNextHourTimestamp();
+
+      const result = {
+        period: 'last_6_hours',
+        average: avg,
+        trend,
+        comfortIndex: comfort,
+        alerts,
+        summaryHTML: aiHTML,
+        expiresAt,
+      };
+
+      InsightsService.cache.set(cacheKey, {
+        data: result,
+        expiresAt,
+      });
+
+      return result;
+    } finally {
+      InsightsService.locks.delete(cacheKey);
+    }
+  }
+
+  private getNextHourTimestamp(): number {
+    const now = new Date();
+    return new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      now.getHours() + 1,
+      0,
+      0,
+      0,
+    ).getTime();
   }
 
   private buildPrompt(
@@ -50,67 +105,78 @@ export class InsightsService {
     comfort: number,
     alerts: string[],
   ): string {
-    const reverseTimeline = [...logs].sort(
-      (a, b) => new Date(a.current.time).getTime() - new Date(b.current.time).getTime(),
-    );
-
     return `
-        ANÁLISE CLIMÁTICA - ${logs[0].city_name}
-        CONTEXTO:
-        Você é um meteorologista especializado. Analise os dados climáticos das últimas ${logs.length} observações e gere insights.
+      ANÁLISE CLIMÁTICA - Local selecionado
+      CONTEXTO:
+      Você é um meteorologista especializado. Analise os dados climáticos das últimas ${logs.length} observações e gere insights claros e úteis.
 
-        DADOS MÉDIOS:
-        - Temperatura: ${avg.temperature.toFixed(1)}°C
-        - Umidade: ${avg.humidity.toFixed(1)}%
-        - Vento: ${avg.windSpeed.toFixed(1)} km/h
-        - Probabilidade de chuva: ${avg.rainProbability.toFixed(2)}
+      DADOS MÉDIOS:
+      - Temperatura: ${avg.temperature.toFixed(1)}°C
+      - Umidade: ${avg.humidity.toFixed(1)}%
+      - Vento: ${avg.windSpeed.toFixed(1)} km/h
+      - Probabilidade de chuva: ${avg.rainProbability.toFixed(2)}
 
-        TENDÊNCIAS:
-        - Temperatura: ${trend.temperature}
-        - Umidade: ${trend.humidity}
-        - Vento: ${trend.windSpeed}
+      TENDÊNCIAS:
+      - Temperatura: ${trend.temperature}
+      - Umidade: ${trend.humidity}
+      - Vento: ${trend.windSpeed}
 
-        ÍNDICE DE CONFORTO: ${comfort}
+      ÍNDICE DE CONFORTO: ${comfort}
 
-        ALERTAS:
-        ${alerts.length > 0 ? alerts.join(', ') : 'Nenhum alerta'}
+      ALERTAS:
+      ${alerts.length > 0 ? alerts.join(', ') : 'Nenhum alerta'}
 
-        REQUISITOS:
-        1. Crie um resumo textual de 2-3 frases
-        2. Forneça análise detalhada das tendências
-        3. Gere recomendações práticas (ex.: guarda-chuva, roupas, cuidados)
-        4. A resposta deve ser em HTML:
-           - Títulos H3
-           - Listas em <ul><li>
-           - Texto em <p>
-           - Não mostrar coordenadas da cidade
-        `;
+      REQUISITOS:
+      1. Crie um resumo textual de 2 a 3 frases
+      2. Forneça uma análise detalhada das tendências
+      3. Gere recomendações práticas
+      4. A resposta deve ser em HTML válido
+    `;
+  }
+
+  private async callAI(prompt: string): Promise<string> {
+    if (InsightsService.globalLock) {
+      throw new InternalServerErrorException(
+        'IA ocupada no momento. Tente novamente mais tarde.',
+      );
     }
 
-    private async callAI(prompt: string): Promise<string> {
-        try {
-            const res = await axios.post(
-                process.env.GEMINI_API_URL!,
-                {
-                    system_instruction: {
-                      parts: [{ text: 'Você é um profissional experiente em análise climática e meteorologia' }],
-                    },
-                    contents: { parts: [{ text: prompt }] },
-                    generationConfig: { temperature: 1.0 },
-                },
-                {
-                    headers: {
-                        'x-goog-api-key': process.env.GEMINI_API_KEY,
-                        'Content-Type': 'application/json',
-                    },
-                },
-            );
-          
-            // Retorna apenas HTML limpo
-            return res.data.candidates[0].content.parts[0].text.replace('```', '').replace('html', '');
-        } catch (error) {
-            throw new InternalServerErrorException('Erro ao gerar insights com IA');
-        }
+    InsightsService.globalLock = true;
+
+    try {
+      const response = await genAI.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          temperature: 0.6,
+          maxOutputTokens: 512,
+        },
+      });
+
+      const text = response.text;
+
+      if (!text) {
+        throw new Error('Resposta vazia da IA');
+      }
+
+      return text
+        .replace(/```/g, '')
+        .replace(/html/gi, '')
+        .trim();
+    } catch (error: any) {
+      if (error?.message?.includes('429')) {
+        throw new HttpException(
+          'Limite de requisições da IA atingido. Tente novamente após a próxima atualização.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+
+      console.error('Gemini SDK error:', error);
+      throw new InternalServerErrorException(
+        'Erro ao gerar insights com IA',
+      );
+    } finally {
+      InsightsService.globalLock = false;
     }
+  }
 }
-
