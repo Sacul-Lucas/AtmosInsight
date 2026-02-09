@@ -130,7 +130,7 @@ export class InsightsService {
       1. Crie um resumo textual de 2 a 3 frases
       2. Forneça uma análise detalhada das tendências
       3. Gere recomendações práticas
-      4. A resposta deve ser em HTML válido
+      4. Retorne SOMENTE HTML válido (sem markdown e sem acento agudo)
     `;
   }
 
