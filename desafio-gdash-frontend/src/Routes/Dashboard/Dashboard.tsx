@@ -4,6 +4,8 @@ import { Skeleton } from "@/Core/Components/shadcnComponents/Ui/skeleton"
 import { AppSidebarCard } from "@/Core/Components/Cards/AppSidebarCard"
 import { Toaster } from "@/Core/Components/shadcnComponents/Ui/sonner"
 import { WeatherCodes } from "@/Core/lib/utils/weatherConditionCodes"
+import { Button } from "@/Core/Components/shadcnComponents/Ui/button"
+import { GetInsightsAction } from "@/Core/Actions/GetInsightsAction"
 import type { WeatherLogs } from "@/Core/lib/types/WeatherLogs"
 import type { Insights } from "@/Core/lib/types/Insights"
 import { DashChart } from "@/Core/Components/Charts/DashChart"
@@ -11,8 +13,6 @@ import { formatDate } from "@/Core/lib/utils/dateFormatter"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import appDashboardIcon from "@/assets/icons/dashboard.svg"
-import { GetInsightsAction } from "@/Core/Actions/GetInsightsAction"
-import { Button } from "@/Core/Components/shadcnComponents/Ui/button"
 
 export const Dashboard = () => {
   const [logs, setLogs] = useState<WeatherLogs[]>([]);
@@ -77,7 +77,10 @@ export const Dashboard = () => {
         setInsights(getInsightsMessage);
         sessionStorage.setItem(
           cacheKey,
-          JSON.stringify(getInsightsMessage),
+          JSON.stringify({
+            ...getInsightsMessage,
+            expiresAt: getInsightsMessage.expiresAt,
+          }),
         );
         break;
 
@@ -196,7 +199,7 @@ export const Dashboard = () => {
           <>
             <AppSidebarCard 
               cardTitle="Tendência" 
-              cardStyle="w-full backdrop-blur-md bg-emerald-600/25" 
+              cardStyle="w-full backdrop-blur-md bg-indigo-600/10" 
               cardDescription="Propensão da mudança da temperatura nas próximas horas" 
               AIGenerated 
             >
@@ -211,7 +214,7 @@ export const Dashboard = () => {
 
             <AppSidebarCard 
               cardTitle="Conforto" 
-              cardStyle="w-full backdrop-blur-lg bg-emerald-600/25" 
+              cardStyle="w-full backdrop-blur-lg bg-indigo-600/10" 
               cardDescription="Indíce calculado que define o conforto climático atual" 
               AIGenerated 
             >
@@ -223,6 +226,58 @@ export const Dashboard = () => {
                 }
               </span>
             </AppSidebarCard>
+
+            <AppSidebarCard 
+              cardTitle="Valores médios" 
+              cardStyle="w-full backdrop-blur-lg bg-indigo-600/10" 
+              cardDescription="Valores médios dos dados climáticos coletados nas últimas 6 horas" 
+              AIGenerated 
+            >
+              <span>
+                {loadingInisghts ? 
+                  (<Skeleton className="h-6"/>) 
+                  : 
+                  <div className="flex flex-col">
+                    <span>Temperatura: {insights.average.temperature}°C</span>
+                    <span>Humidade: {insights.average.humidity}</span>
+                    <span>Probabilidade de chuva: {insights.average.rainProbability}%</span>
+                    <span>Velocidade do vento: {insights.average.windSpeed}km/h</span>
+                  </div>
+                }
+              </span>
+            </AppSidebarCard>
+
+            <AppSidebarCard 
+              cardTitle="Resumo" 
+              cardStyle="w-full backdrop-blur-lg bg-indigo-600/10" 
+              cardDescription="Extrato sobre os dados climáticos coletados" 
+              AIGenerated 
+            >
+              <span>
+                {loadingInisghts ? 
+                  (<Skeleton className="h-6"/>) 
+                  : 
+                  `${insights.summaryHTML ? insights.summaryHTML : <></>}`
+                }
+              </span>
+            </AppSidebarCard>
+
+            {insights.alerts.length > 0 && insights.alerts.map(alert => (
+              <AppSidebarCard 
+                cardTitle="Alerta" 
+                cardStyle="w-full backdrop-blur-lg bg-amber-600/10" 
+                cardDescription="Aviso gerado a partir dos dados coletados" 
+                AIGenerated 
+              >
+                <span>
+                  {loadingInisghts ? 
+                    (<Skeleton className="h-6"/>) 
+                    : 
+                    `${alert}`
+                  }
+                </span>
+              </AppSidebarCard>
+            ))}
           </>
         )}
 

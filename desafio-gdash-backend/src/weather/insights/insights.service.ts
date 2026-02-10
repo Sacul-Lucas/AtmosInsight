@@ -55,7 +55,7 @@ export class InsightsService {
       const comfort = calculateComfort(avg.temperature, avg.humidity);
 
       const alerts: string[] = [];
-      if (avg.rainProbability > 0.7) alerts.push('Alta chance de chuva');
+      if (avg.rainProbability > 70) alerts.push('Alta chance de chuva');
       if (avg.temperature > 32) alerts.push('Calor extremo');
       if (avg.temperature < 10) alerts.push('Frio intenso');
 
@@ -106,31 +106,37 @@ export class InsightsService {
     alerts: string[],
   ): string {
     return `
-      ANÁLISE CLIMÁTICA - Local selecionado
-      CONTEXTO:
-      Você é um meteorologista especializado. Analise os dados climáticos das últimas ${logs.length} observações e gere insights claros e úteis.
+      Você é um meteorologista profissional.
+
+      Analise os dados climáticos observados nas últimas ${logs.length} coletas e gere insights claros, objetivos e úteis ao usuario.
 
       DADOS MÉDIOS:
-      - Temperatura: ${avg.temperature.toFixed(1)}°C
-      - Umidade: ${avg.humidity.toFixed(1)}%
-      - Vento: ${avg.windSpeed.toFixed(1)} km/h
-      - Probabilidade de chuva: ${avg.rainProbability.toFixed(2)}
+      Temperatura média: ${avg.temperature.toFixed(1)} °C
+      Umidade média: ${avg.humidity.toFixed(1)} %
+      Vento médio: ${avg.windSpeed.toFixed(1)} km/h
+      Probabilidade média de chuva: ${avg.rainProbability.toFixed(2)}
 
       TENDÊNCIAS:
-      - Temperatura: ${trend.temperature}
-      - Umidade: ${trend.humidity}
-      - Vento: ${trend.windSpeed}
+      Temperatura: ${trend.temperature}
+      Umidade: ${trend.humidity}
+      Vento: ${trend.windSpeed}
 
       ÍNDICE DE CONFORTO: ${comfort}
 
       ALERTAS:
-      ${alerts.length > 0 ? alerts.join(', ') : 'Nenhum alerta'}
+      ${alerts.length ? alerts.join(', ') : 'Nenhum'}
 
-      REQUISITOS:
-      1. Crie um resumo textual de 2 a 3 frases
-      2. Forneça uma análise detalhada das tendências
-      3. Gere recomendações práticas
-      4. Retorne SOMENTE HTML válido (sem markdown e sem acento agudo)
+      TAREFAS:
+      1. Crie um resumo executivo de 2 a 3 frases
+      2. Analise as tendências observadas nas ultimas horas
+      3. Projete o comportamento do clima para as próximas 3 a 6 horas
+      4. Gere recomendações práticas para o usuário
+
+      FORMATO OBRIGATORIO DA RESPOSTA:
+      - Retorne APENAS texto válido, sem título
+      - Nunca utilize markdown
+      - Nunca inclua coordenadas ou dados de localização
+      - Sem texto introdutório, como: "Aqui está a análise detalhada do clima, com projeções e recomendações"
     `;
   }
 
@@ -149,7 +155,7 @@ export class InsightsService {
         contents: prompt,
         config: {
           temperature: 0.6,
-          maxOutputTokens: 512,
+          maxOutputTokens: 1500,
         },
       });
 
