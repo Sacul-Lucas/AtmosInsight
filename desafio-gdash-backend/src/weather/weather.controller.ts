@@ -15,6 +15,7 @@ import { CreateWeatherLogDto } from './dto/createWeatherLog.dto';
 import { QueryWeatherDto } from './dto/queryWeather.dto';
 import { WorkerGuard } from '../common/guards/worker.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { InsightsService } from './insights/insights.service';
 import { ExportService } from './export/export.service';
 import type { Response } from 'express';
 import type { Request } from 'express';
@@ -24,16 +25,15 @@ export class WeatherController {
   constructor(
     private readonly weatherService: WeatherService,
     private readonly exportService: ExportService,
+    private readonly insightsService: InsightsService
   ) {}
 
-  // 🔒 Rota interna (worker)
   @Post('logs')
   @UseGuards(WorkerGuard)
   create(@Body() dto: CreateWeatherLogDto) {
     return this.weatherService.upsert(dto);
   }
 
-  // 👤 Rota do frontend
   @Get('logs')
   @UseGuards(JwtAuthGuard)
   async findAll(@Query() query: QueryWeatherDto, id: string) {
@@ -52,7 +52,6 @@ export class WeatherController {
     };
   }
 
-  // ---------- OBSERVED ----------
   @Get('logs/observed')
   @UseGuards(JwtAuthGuard)
   async getObserved(@Query() query: QueryWeatherDto, id: string) {
@@ -73,7 +72,6 @@ export class WeatherController {
     };
   }
 
-  // ---------- FORECAST ----------
   @Get('logs/forecast')
   @UseGuards(JwtAuthGuard)
   async getForecast(@Query() query: QueryWeatherDto, id: string) {
@@ -94,7 +92,26 @@ export class WeatherController {
     };
   }
 
-  // ---------- TIMESERIES (HISTÓRICO + PREVISÃO) ----------
+  @Get('/insights')
+  async getInsights(
+    @Query('locationId') locationId: string,
+    id: string
+  ) {
+    const insights = await this.insightsService.generate(
+      id,
+      locationId,
+    )
+
+    if (!insights) {
+      throw new NotFoundException('Não foi possível gerar os insights de IA');
+    }
+    
+    return {
+      success: true,
+      message: insights
+    };
+  }
+
   @Get('logs/timeseries')
   @UseGuards(JwtAuthGuard)
   async getTimeSeries(@Query() query: QueryWeatherDto, id: string) {
@@ -115,7 +132,6 @@ export class WeatherController {
     };
   }
 
-  // ---------- CSV ----------
   @Get('export/csv')
   @UseGuards(JwtAuthGuard)
   async exportCSV(
@@ -144,7 +160,6 @@ export class WeatherController {
     res.send(csv);
   }
 
-  // ---------- XLSX ----------
   @Get('export/xlsx')
   @UseGuards(JwtAuthGuard)
   async exportXLSX(

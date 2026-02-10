@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsDateString, IsObject } from 'class-validator';
+import { IsString, IsDateString, IsObject } from 'class-validator';
 
 export class CreateWeatherLogDto {
   @IsString()

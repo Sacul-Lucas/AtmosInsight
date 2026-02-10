@@ -4,7 +4,10 @@ import { Skeleton } from "@/Core/Components/shadcnComponents/Ui/skeleton"
 import { AppSidebarCard } from "@/Core/Components/Cards/AppSidebarCard"
 import { Toaster } from "@/Core/Components/shadcnComponents/Ui/sonner"
 import { WeatherCodes } from "@/Core/lib/utils/weatherConditionCodes"
+import { Button } from "@/Core/Components/shadcnComponents/Ui/button"
+import { GetInsightsAction } from "@/Core/Actions/GetInsightsAction"
 import type { WeatherLogs } from "@/Core/lib/types/WeatherLogs"
+import type { Insights } from "@/Core/lib/types/Insights"
 import { DashChart } from "@/Core/Components/Charts/DashChart"
 import { formatDate } from "@/Core/lib/utils/dateFormatter"
 import { useEffect, useMemo, useState } from "react"
@@ -14,6 +17,9 @@ import appDashboardIcon from "@/assets/icons/dashboard.svg"
 export const Dashboard = () => {
   const [logs, setLogs] = useState<WeatherLogs[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingInisghts, setLoadingInisghts] = useState(false);
+
+  const [insights, setInsights] = useState<Insights>();
   
   const fetchLogs = async () => {
     setLoading(true);
@@ -44,6 +50,52 @@ export const Dashboard = () => {
         break;
     }
     setLoading(false);
+  };
+
+  const getInsights = async () => {
+    if (loadingInisghts) return;
+
+    const cacheKey = 'dashboard:insights';
+    const cached = sessionStorage.getItem(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+
+      if (Date.now() < parsed.expiresAt) {
+        setInsights(parsed);
+        return;
+      }
+    }
+
+    setLoadingInisghts(true);
+
+    const getInsightsRes = await GetInsightsAction.execute();
+    const getInsightsMessage = getInsightsRes.data;
+
+    switch (getInsightsRes.status) {
+      case 'SUCCESS':
+        setInsights(getInsightsMessage);
+        sessionStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            ...getInsightsMessage,
+            expiresAt: getInsightsMessage.expiresAt,
+          }),
+        );
+        break;
+
+      case 'INSIGHTS_NOT_FOUND':
+      case 'TOKEN_NOT_FOUND':
+      case 'INVALID_TOKEN':
+      case 'UNKNOWN':
+        toast.error(getInsightsMessage, {
+          className:
+            '!bg-red-700 !border-red-800 !text-white !align-middle',
+        });
+        break;
+    }
+
+    setLoadingInisghts(false);
   };
 
   const latestObserved = useMemo(() => {
@@ -128,8 +180,112 @@ export const Dashboard = () => {
   
   return (
     <AppSidebarBody appSidebarTitle="AtmosInsight - Dashboard" appSidebarIcon={appDashboardIcon} appSidebarBodyStyle="flex-col">
+      <div className="mt-8 xl:max-w-[90%]! h-auto w-full justify-center items-center align-middle">
+        <div className="space-y-0.5">
+          <div className="flex flex-row">
+            <h1 className="text-2xl leading-none font-medium">Dashboard</h1>
+            <Button onClick={getInsights} disabled={loadingInisghts} className="flex ml-auto cursor-pointer">
+              {loadingInisghts ? 'Gerando insights…' : 'Gerar insights de IA'}
+            </Button>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            {`Últimas informações climáticas coletadas da API pública. Fonte: ${loading || !latestObserved ? (<Skeleton className="h-6"/>) : latestObserved.source}`}
+          </p>
+        </div>
+      </div>
+
       <div className='gap-4 grid-cols-[repeat(2,1fr)] grid mt-8 xl:max-w-[90%]! h-auto w-full justify-center items-center align-middle'>
-        <AppSidebarCard cardTitle="Temperatura Atual" cardWidth="w-full" cardDescription="Valor medido pelo sensor de temperatura">
+        {insights && (
+          <>
+            <AppSidebarCard 
+              cardTitle="Tendência" 
+              cardStyle="w-full backdrop-blur-md bg-indigo-600/10" 
+              cardDescription="Propensão da mudança da temperatura nas próximas horas" 
+              AIGenerated 
+            >
+              <span>
+                {loadingInisghts ? 
+                  (<Skeleton className="h-6"/>) 
+                  : 
+                  `${insights.trend.temperature}`
+                }
+              </span>
+            </AppSidebarCard>
+
+            <AppSidebarCard 
+              cardTitle="Conforto" 
+              cardStyle="w-full backdrop-blur-lg bg-indigo-600/10" 
+              cardDescription="Indíce calculado que define o conforto climático atual" 
+              AIGenerated 
+            >
+              <span>
+                {loadingInisghts ? 
+                  (<Skeleton className="h-6"/>) 
+                  : 
+                  `${insights.comfortIndex}`
+                }
+              </span>
+            </AppSidebarCard>
+
+            <AppSidebarCard 
+              cardTitle="Valores médios" 
+              cardStyle="w-full backdrop-blur-lg bg-indigo-600/10" 
+              cardDescription="Valores médios dos dados climáticos coletados nas últimas 6 horas" 
+              AIGenerated 
+            >
+              <span>
+                {loadingInisghts ? 
+                  (<Skeleton className="h-6"/>) 
+                  : 
+                  <div className="flex flex-col">
+                    <span>Temperatura: {insights.average.temperature}°C</span>
+                    <span>Umidade: {insights.average.humidity}%</span>
+                    <span>Probabilidade de chuva: {insights.average.rainProbability}%</span>
+                    <span>Velocidade do vento: {insights.average.windSpeed}km/h</span>
+                  </div>
+                }
+              </span>
+            </AppSidebarCard>
+
+            <AppSidebarCard 
+              cardTitle="Resumo" 
+              cardStyle="w-full backdrop-blur-lg bg-indigo-600/10" 
+              cardDescription="Extrato sobre os dados climáticos coletados" 
+              AIGenerated 
+            >
+              <span>
+                {loadingInisghts ? 
+                  (<Skeleton className="h-6"/>) 
+                  : 
+                  `${insights.summaryHTML ? insights.summaryHTML : <></>}`
+                }
+              </span>
+            </AppSidebarCard>
+
+            {insights.alerts.length > 0 && insights.alerts.map(alert => (
+              <AppSidebarCard 
+                cardTitle="Alerta" 
+                cardStyle="w-full backdrop-blur-lg bg-amber-600/10" 
+                cardDescription="Aviso gerado a partir dos dados coletados" 
+                AIGenerated 
+              >
+                <span>
+                  {loadingInisghts ? 
+                    (<Skeleton className="h-6"/>) 
+                    : 
+                    `${alert}`
+                  }
+                </span>
+              </AppSidebarCard>
+            ))}
+          </>
+        )}
+
+        <AppSidebarCard 
+          cardTitle="Temperatura Atual" 
+          cardStyle="w-full" 
+          cardDescription="Valor medido pelo sensor de temperatura"
+        >
           <span>
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) : 
@@ -138,7 +294,11 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
-        <AppSidebarCard cardTitle="Umidade do ar" cardWidth="w-full" cardDescription="Porcentagem atual de umidade do ar">
+        <AppSidebarCard 
+          cardTitle="Umidade do ar" 
+          cardStyle="w-full" 
+          cardDescription="Porcentagem atual de umidade do ar"
+        >
           <span>
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) : 
@@ -147,7 +307,11 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
-        <AppSidebarCard cardTitle="Velocidade do vento" cardWidth="w-full" cardDescription="Velocidade do vento mensurada em km/h">
+        <AppSidebarCard 
+          cardTitle="Velocidade do vento" 
+          cardStyle="w-full" 
+          cardDescription="Velocidade do vento mensurada em km/h"
+        >
           <span>
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) : 
@@ -156,7 +320,11 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
-        <AppSidebarCard cardTitle="Condição do tempo" cardWidth="w-full" cardDescription="Condição do clima atual de acordo com o código do sensor">
+        <AppSidebarCard 
+          cardTitle="Condição do tempo" 
+          cardStyle="w-full" 
+          cardDescription="Condição do clima atual de acordo com o código do sensor"
+        >
           <span>
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) 
@@ -166,7 +334,11 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
-        <AppSidebarCard cardTitle="Sensação térmica" cardWidth="w-full" cardDescription="Medida da temperatura aparente sentida pelo corpo">
+        <AppSidebarCard 
+          cardTitle="Sensação térmica" 
+          cardStyle="w-full" 
+          cardDescription="Medida da temperatura aparente sentida pelo corpo"
+        >
           <span>
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) 
@@ -176,7 +348,11 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
-        <AppSidebarCard cardTitle="Visibilidade" cardWidth="w-full" cardDescription="Distância de visibilidade, que pode ser influenciada por nuvens baixas, umidade e aerossóis">
+        <AppSidebarCard 
+          cardTitle="Visibilidade" 
+          cardStyle="w-full" 
+          cardDescription="Distância de visibilidade, que pode ser influenciada por nuvens baixas, umidade e aerossóis"
+        >
           <span>
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) 
@@ -186,7 +362,7 @@ export const Dashboard = () => {
           </span>
         </AppSidebarCard>
 
-        <AppSidebarCard cardWidth="w-full">
+        <AppSidebarCard cardStyle="w-full">
           <DashChart 
             chartTitle="Gráfico em barras - Temperaturas" 
             chartType="Bar"
@@ -215,7 +391,7 @@ export const Dashboard = () => {
           />
         </AppSidebarCard>
 
-        <AppSidebarCard cardWidth="w-full">
+        <AppSidebarCard cardStyle="w-full">
           <DashChart 
             chartTitle="Gráfico em área - Probabilidade de precipitação" 
             chartType="Area"
@@ -244,7 +420,7 @@ export const Dashboard = () => {
           />
         </AppSidebarCard>
 
-        <AppSidebarCard cardWidth="w-full">
+        <AppSidebarCard cardStyle="w-full">
           <DashChart 
             chartTitle="Gráfico em barras - Sensação térmica" 
             chartType="Bar"
@@ -273,7 +449,7 @@ export const Dashboard = () => {
           />
         </AppSidebarCard>
 
-        <AppSidebarCard cardWidth="w-full">
+        <AppSidebarCard cardStyle="w-full">
           <DashChart 
             chartTitle="Gráfico em linhas - Umidade do ar" 
             chartType="Line"

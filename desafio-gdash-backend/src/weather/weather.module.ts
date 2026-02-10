@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { WeatherController } from './weather.controller';
 import { WeatherService } from './weather.service';
 import { ExportService } from './export/export.service';
+import { InsightsService } from './insights/insights.service';
 import { WeatherLog, WeatherLogSchema } from './schemas/weatherLog.schema';
 
 @Module({
@@ -12,6 +13,6 @@ import { WeatherLog, WeatherLogSchema } from './schemas/weatherLog.schema';
     ]),
   ],
   controllers: [WeatherController],
-  providers: [WeatherService, ExportService],
+  providers: [WeatherService, ExportService, InsightsService],
 })
 export class WeatherModule {}

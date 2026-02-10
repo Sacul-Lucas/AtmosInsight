@@ -51,7 +51,7 @@ export class WeatherService {
         return this.weatherModel.find({
           userId,
           locationId,
-          timestamp: { $gte: from },
+          collectedAt: { $gte: from },
         });
     }
 
