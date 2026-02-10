@@ -239,7 +239,7 @@ export const Dashboard = () => {
                   : 
                   <div className="flex flex-col">
                     <span>Temperatura: {insights.average.temperature}°C</span>
-                    <span>Humidade: {insights.average.humidity}</span>
+                    <span>Umidade: {insights.average.humidity}%</span>
                     <span>Probabilidade de chuva: {insights.average.rainProbability}%</span>
                     <span>Velocidade do vento: {insights.average.windSpeed}km/h</span>
                   </div>
