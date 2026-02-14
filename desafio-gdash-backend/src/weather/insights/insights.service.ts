@@ -127,15 +127,16 @@ export class InsightsService {
       ${alerts.length ? alerts.join(', ') : 'Nenhum'}
 
       TAREFAS:
-      1. Crie um resumo executivo de 2 a 3 frases
+      1. Crie um resumo executivo de leitura rápida e eficiente
       2. Analise as tendências observadas nas ultimas horas
       3. Projete o comportamento do clima para as próximas 3 a 6 horas
       4. Gere recomendações práticas para o usuário
 
-      FORMATO OBRIGATORIO DA RESPOSTA:
+      FORMATO OBRIGATÓRIO DA RESPOSTA:
       - Retorne APENAS texto válido, sem título
       - Nunca utilize markdown
       - Nunca inclua coordenadas ou dados de localização
+      - O texto deve ter, no máximo, 4 frases, a fim de manter o usuário interessado
       - Sem texto introdutório, como: "Aqui está a análise detalhada do clima, com projeções e recomendações"
     `;
   }
