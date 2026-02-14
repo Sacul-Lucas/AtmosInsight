@@ -200,7 +200,7 @@ export const Dashboard = () => {
             <AppSidebarCard 
               cardTitle="Tendência" 
               cardStyle="w-full backdrop-blur-md bg-indigo-600/10" 
-              cardDescription="Propensão da mudança da temperatura nas próximas horas" 
+              cardDescription="Propensão da mudança da temperatura nas próximas 6 horas" 
               AIGenerated 
             >
               <span>
@@ -215,7 +215,7 @@ export const Dashboard = () => {
             <AppSidebarCard 
               cardTitle="Conforto" 
               cardStyle="w-full backdrop-blur-lg bg-indigo-600/10" 
-              cardDescription="Indíce calculado que define o conforto climático atual" 
+              cardDescription="Índice calculado que define o conforto climático atual (0 - menos confortável; 100 - conforto máximo)" 
               AIGenerated 
             >
               <span>
