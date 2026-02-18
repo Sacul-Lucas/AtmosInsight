@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { WeatherLog } from './schemas/weatherLog.schema';
 import { CreateWeatherLogDto } from './dto/createWeatherLog.dto';
+import { getWeatherConditionLabel } from './utils/weatherConditionCodes';
 
 @Injectable()
 export class WeatherService {
@@ -32,15 +33,21 @@ export class WeatherService {
 
     async findAll(userId: string, locationId?: string) {
         const filter: any = { userId };
-
+        
         if (locationId) {
             filter.locationId = locationId;
         }
-
-        return this.weatherModel
+      
+        const logs = await this.weatherModel
             .find(filter)
             .sort({ collectedAt: -1 })
-            .limit(500);
+            .limit(500)
+            .lean();
+      
+        return logs.map((log) => ({
+            ...log,
+            conditionLabel: getWeatherConditionLabel(log.condition),
+        }));
     }
 
     async findByPeriod(
@@ -57,15 +64,20 @@ export class WeatherService {
 
     async findObserved(userId: string, locationId?: string) {
         const filter: any = { userId, type: 'observed' };
-
+        
         if (locationId) {
             filter.locationId = locationId;
         }
-
-        return this.weatherModel
+      
+        const logs = await this.weatherModel
             .find(filter)
-            .sort({ collected_at: 1 })
+            .sort({ collectedAt: 1 })
             .lean();
+        
+        return logs.map((log) => ({
+            ...log,
+            conditionLabel: getWeatherConditionLabel(log.condition),
+        }));
     }
 
     async findForecast(userId: string, locationId?: string) {
@@ -74,10 +86,15 @@ export class WeatherService {
         if (locationId) {
             filter.locationId = locationId;
         }
-        return this.weatherModel
+        const logs = await this.weatherModel
             .find(filter)
-            .sort({ collected_at: 1 })
+            .sort({ collectedAt: 1 })
             .lean();
+
+        return logs.map((log) => ({
+            ...log,
+            conditionLabel: getWeatherConditionLabel(log.condition),
+        }));
     }
 
     async findTimeSeries(userId: string, locationId?: string) {
@@ -86,10 +103,15 @@ export class WeatherService {
         if (locationId) {
             filter.locationId = locationId;
         }
-        return this.weatherModel
+        const logs = await this.weatherModel
             .find(filter)
-            .sort({ collected_at: 1 })
+            .sort({ collectedAt: 1 })
             .lean();
+
+        return logs.map((log) => ({
+            ...log,
+            conditionLabel: getWeatherConditionLabel(log.condition),
+        }));
     }
 
     async findForExport(userId: string, locationId?: string) {
@@ -98,10 +120,16 @@ export class WeatherService {
         if (locationId) {
             filter.locationId = locationId;
         }
-    
-        return this.weatherModel
+      
+        const logs = await this.weatherModel
             .find(filter)
-            .sort({ timestamp: 1 });
+            .sort({ collectedAt: 1 })
+            .lean();
+      
+        return logs.map((log) => ({
+            ...log,
+            conditionLabel: getWeatherConditionLabel(log.condition),
+        }));
     }
 
 }

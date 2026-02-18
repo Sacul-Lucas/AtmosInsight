@@ -31,8 +31,8 @@ export class WeatherLog extends Document {
   })
   type: 'observed' | 'forecast';
 
-  @Prop()
-  condition: string;
+  @Prop({ required: true })
+  condition: number;
 
   @Prop()
   source: string;

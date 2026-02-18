@@ -1,13 +1,6 @@
-import { IsString, IsDateString, IsObject, IsNumber } from 'class-validator';
-
-export class CreateWeatherLogDto {
-  @IsString()
+export interface WeatherExport {
   locationId: string;
-
-  @IsDateString()
-  collectedAt: string;
-
-  @IsObject()
+  collectedAt: Date;
   metrics: {
     temperature: number;
     apparent_temperature: number;
@@ -17,13 +10,8 @@ export class CreateWeatherLogDto {
     precipitation_probability: number;
     visibility: number;
   };
-
-  @IsString()
   type: 'observed' | 'forecast';
-
-  @IsNumber()
   condition: number;
-
-  @IsString()
+  conditionLabel: string;
   source: string;
 }

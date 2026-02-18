@@ -1,0 +1,34 @@
+const WeatherCodes: Record<number, string> = {
+    0: "Céu limpo",
+    1: "Principalmente limpo",
+    2: "Parcialmente nublado",
+    3: "Nublado",
+    45: "Neblina",
+    48: "Neblina com geada",
+    51: "Chuvisco: intensidade leve",
+    53: "Chuvisco: intensidade moderada",
+    55: "Chuvisco: intensidade densa",
+    56: "Chuvisco congelante: intensidade leve",
+    57: "Chuvisco congelante: intensidade densa",
+    61: "Chuva: intensidade leve",
+    63: "Chuva: intensidade moderada",
+    65: "Chuva: intensidade forte",
+    66: "Chuva congelante: intensidade leve",
+    67: "Chuva congelante: intensidade forte",
+    71: "Queda de neve: intensidade leve",
+    73: "Queda de neve: intensidade moderada",
+    75: "Queda de neve: intensidade forte",
+    77: "Grãos de neve",
+    80: "Pancadas de chuva: leves",
+    81: "Pancadas de chuva: moderadas",
+    82: "Pancadas de chuva: violentas",
+    85: "Pancadas de neve: leves",
+    86: "Pancadas de neve: fortes",
+    95: "Tempestade: leve ou moderada",
+    96: "Tempestade com granizo leve",
+    99: "Tempestade com granizo forte"
+};
+
+export function getWeatherConditionLabel(code: number): string {
+  return WeatherCodes[code] ?? 'Condição desconhecida';
+}

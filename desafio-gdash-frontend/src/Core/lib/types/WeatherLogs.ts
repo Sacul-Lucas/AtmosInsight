@@ -11,7 +11,8 @@ export interface WeatherLogs {
     visibility: number;
   };
   type: 'observed' | 'forecast';
-  condition: string;
+  condition: number;
+  conditionLabel: string
   collectedAt: string;
   createdAt: string;
   updatedAt: string;

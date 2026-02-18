@@ -1,9 +1,10 @@
-import { GetWeatherLogsAction } from "@/Core/Actions/GetWeatherLogAction"
+import { WeatherLogDataColumns } from "@/Core/Components/Tables/DataTables/Columns/WeatherLogDataColumns"
+import { WeatherLogDataTable } from "@/Core/Components/Tables/DataTables/WeatherLogDataTable"
 import { AppSidebarBody } from "@/Core/Components/AppSidebarBody/AppSidebarBody"
+import { GetWeatherLogsAction } from "@/Core/Actions/GetWeatherLogAction"
 import { Skeleton } from "@/Core/Components/shadcnComponents/Ui/skeleton"
 import { AppSidebarCard } from "@/Core/Components/Cards/AppSidebarCard"
 import { Toaster } from "@/Core/Components/shadcnComponents/Ui/sonner"
-import { WeatherCodes } from "@/Core/lib/utils/weatherConditionCodes"
 import { Button } from "@/Core/Components/shadcnComponents/Ui/button"
 import { GetInsightsAction } from "@/Core/Actions/GetInsightsAction"
 import type { WeatherLogs } from "@/Core/lib/types/WeatherLogs"
@@ -200,7 +201,7 @@ export const Dashboard = () => {
             <AppSidebarCard 
               cardTitle="Tendência" 
               cardStyle="w-full backdrop-blur-md bg-indigo-600/10" 
-              cardDescription="Propensão da mudança da temperatura nas próximas 6 horas" 
+              cardDescription="Propensão da mudança da temperatura nas próximas horas" 
               AIGenerated 
             >
               <span>
@@ -329,7 +330,7 @@ export const Dashboard = () => {
             {loading || !latestObserved ? 
               (<Skeleton className="h-6"/>) 
               : 
-              WeatherCodes[Number(latestObserved.condition)]
+              latestObserved.conditionLabel
             }
           </span>
         </AppSidebarCard>
@@ -478,6 +479,9 @@ export const Dashboard = () => {
           />
         </AppSidebarCard>
       </div>
+
+      {!loading ? <WeatherLogDataTable columns={WeatherLogDataColumns} data={logs} /> : <></>}
+
       <Toaster position="bottom-left"/>
     </AppSidebarBody>
   )
